@@ -41,7 +41,7 @@ client.on('messageCreate', async (message) => {
     ====================================
     */
 
-  if (message.content.startsWith('!setsteam')) {
+  if (message.content.startsWith('/setsteam')) {
     const args = message.content.split(' ');
 
     const steamProfile = args[1];
@@ -74,7 +74,9 @@ client.on('messageCreate', async (message) => {
 
     saveUsers(users);
 
-    await message.reply(`✅ Steam vinculado correctamente:\n${steamProfile}`);
+    await message.reply(
+      `✅ Déjame guardar tu Steam para poder encontrarte en batalla.:\n${steamProfile}`,
+    );
 
     return;
   }
@@ -85,17 +87,21 @@ client.on('messageCreate', async (message) => {
     ====================================
     */
 
-  if (message.content === '!lobby') {
+  if (message.content === '/lobby') {
     try {
-      await message.reply('🔎 Buscando lobby de USF4...');
+      await message.reply('Voy a buscar tu hamburguesa... digo, tu lobby 😋');
 
       const response = await axios.get(
         `${process.env.API_URL}/steam/lobby/${message.author.id}`,
       );
 
       if (!response.data.success) {
-        await message.reply(`❌ ${response.data.message}`);
-
+        await message.reply(
+          `🍔💨 ¡Kikosho fallido... 🥺!\n\n` +
+            `🥺 No pude encontrar tu hamburguesa...quiero decir tu lobby 🥺:\n` +
+            `${response.data.message}\n\n` +
+            `🌱 Abre tu sala de **Ultra Street Fighter IV** y volveré a buscarla por ti, luchador. 🥊`,
+        );
         return;
       }
 
@@ -167,6 +173,45 @@ client.on('messageCreate', async (message) => {
 
       await message.reply('❌ Error comunicándose con la API.');
     }
+  }
+
+  /*
+    ====================================
+              COMANDO HELP
+    ====================================
+    */
+  if (message.content === '/help') {
+    await message.reply(
+      '🍔🌸 **Chun-Burger Command List** 🥊\n\n' +
+        '✨ ¡Konnichiwa, luchador! Estos son mis movimientos especiales:\n\n' +
+        '🥋 `/setsteam <perfil_steam>`\n' +
+        '→ Guarda tu Steam para poder ayudarte a encontrar partidas.\n\n' +
+        '💨 `/lobby`\n' +
+        '→ Busco tu lobby de Ultra Street Fighter IV con mi poder de Kikosho.\n\n' +
+        '📖 `/help`\n' +
+        '→ Te muestro todos mis comandos disponibles.\n\n' +
+        '🍔 `/about`\n' +
+        '→ Te cuento quién soy y por qué estoy aquí.\n\n' +
+        '🌟 ¡Buena suerte en tus combates, luchador!',
+    );
+  }
+
+  /*
+    ====================================
+              COMANDO ABOUT
+    ====================================
+    */
+
+  if (message.content === '/about') {
+    await message.reply(
+      '🍔 **Chun-Burger Bot**\n\n' +
+        '🌸 ¡Konnichiwa, luchador! Soy Chun-Burger 🥊✨\n\n' +
+        'Mi trabajo es ayudarte a crear y encontrar lobbies de **Ultra Street Fighter IV** 🍔\n\n' +
+        'Con mis poderes de Kikosho puedo buscar partidas, ayudar a organizar combates y hacer que la pelea empiece más rápido 💨\n\n' +
+        '🌱 Todavía estoy en entrenamiento, así que puede que cometa algún pequeño error uwu.\n\n' +
+        'Gracias por ayudarme a mejorar 💕\n\n' +
+        '🔥 ¡Que comiencen los combates!',
+    );
   }
 });
 
