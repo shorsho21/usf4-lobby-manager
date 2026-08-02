@@ -215,4 +215,16 @@ client.on('messageCreate', async (message) => {
   }
 });
 
+
+const app = express();
+
+const PORT = process.env.PORT || 3000;
+
+app.get("/", (req, res) => {
+  res.send("🍔 Chun-Burger está despierto y listo para luchar! 🥊");
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor HTTP escuchando en el puerto ${PORT}`);
+});
 client.login(process.env.DISCORD_BOT_TOKEN);
