@@ -1,20 +1,26 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { SteamService } from './steam.service';
+
 
 @Controller('steam')
 export class SteamController {
+
 
   constructor(
     private readonly steamService: SteamService,
   ) {}
 
-  @Get('test')
-  test() {
-    return this.steamService.test();
+
+
+  @Get('lobby/:discordId')
+  async getLobby(
+    @Param('discordId') discordId: string,
+  ) {
+
+    return this.steamService.getLobby(
+      discordId,
+    );
+
   }
 
-  @Get('lobby')
-  lobby() {
-    return this.steamService.getProfile();
-  }
 }
