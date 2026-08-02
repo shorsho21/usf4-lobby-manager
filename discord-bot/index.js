@@ -184,7 +184,7 @@ client.on('messageCreate', async (message) => {
     await message.reply(
       '🍔🌸 **Chun-Burger Command List** 🥊\n\n' +
         '✨ ¡Konnichiwa, luchador! Estos son mis movimientos especiales:\n\n' +
-        '🥋 `/setsteam <perfil_steam>`\n' +
+        '🥋 `/setsteam "link perfil de steam"`\n' +
         '→ Guarda tu Steam para poder ayudarte a encontrar partidas.\n\n' +
         '💨 `/lobby`\n' +
         '→ Busco tu lobby de Ultra Street Fighter IV con mi poder de Kikosho.\n\n' +
