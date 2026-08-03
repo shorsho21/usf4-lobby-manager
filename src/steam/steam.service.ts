@@ -35,7 +35,7 @@ export class SteamService {
         success: false,
 
         message:
-          'Usuario no registrado. Usa !setsteam primero.',
+          'Usuario no registrado. Usa /setsteam primero.',
 
       };
 
