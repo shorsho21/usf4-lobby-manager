@@ -20,7 +20,7 @@ export class UsersService {
     );
 
     const users = JSON.parse(data);
-
+    console.log('users: ', users);
     const existingUser = users.find(
       (user) => user.discordId === body.discordId,
     );
@@ -61,6 +61,7 @@ export class UsersService {
 
     const users = JSON.parse(data);
 
+    console.log('users: ', users);
     return users.find(
       (user) => user.discordId === discordId,
     );
