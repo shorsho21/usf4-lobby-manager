@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SteamScraperService } from './steam-scraper/steam-scraper.service';
-import { UsersService } from './users/users.service';
-
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class SteamService {
