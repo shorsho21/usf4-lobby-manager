@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SteamScraperService } from './steam-scraper/steam-scraper.service';
 import { UsersService } from '../users/users.service';
-
+import { SteamApiService } from './steam-api/steam-api.service';
 @Injectable()
 export class SteamService {
 
@@ -11,7 +11,7 @@ export class SteamService {
     private readonly steamScraperService: SteamScraperService,
 
     private readonly usersService: UsersService,
-
+    private readonly steamApiService: SteamApiService,
   ) {}
 
 
@@ -46,21 +46,21 @@ export class SteamService {
 
 
 
-    const steamProfile =
-      user.steamProfile;
+    const steamId =
+      user.steamId;
 
 
 
     try {
       console.log(
         'Obteniendo lobby para el usuario con discordID:',
-        discordId,steamProfile
+        discordId,steamId
       );
 
 
       const joinLink =
-        await this.steamScraperService.getLobbyLink(
-          steamProfile,
+        await this.steamApiService.getLobbyLink(
+          steamId,
         );
 
 

@@ -8,7 +8,7 @@ export class UsersController {
   ) {}
 
   @Post()
-  createUser(@Body() body: any) {
-    return this.usersService.createUser(body);
+  async createUser(@Body() body: any) {
+    return await this.usersService.createUser(body);
   }
 }

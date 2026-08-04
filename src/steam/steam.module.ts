@@ -6,6 +6,7 @@ import { SteamSessionService } from './steam-session/steam-session.service';
 import { SteamScraperService } from './steam-scraper/steam-scraper.service';
 
 import { UsersModule } from '../users/users.module';
+import { SteamApiService } from './steam-api/steam-api.service';
 
 
 @Module({
@@ -22,6 +23,7 @@ import { UsersModule } from '../users/users.module';
     SteamService,
     SteamSessionService,
     SteamScraperService,
+    SteamApiService,
   ],
 
   exports: [
