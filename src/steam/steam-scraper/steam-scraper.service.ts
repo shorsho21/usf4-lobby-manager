@@ -103,6 +103,10 @@ export class SteamScraperService {
 
 
     } catch (error: any) {
+      console.log(
+        'Error obteniendo lobby:',
+        error.message
+      );
 
 
       console.error(
