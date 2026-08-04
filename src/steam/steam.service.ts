@@ -91,6 +91,10 @@ export class SteamService {
 
 
     } catch (error) {
+      console.log(
+        'Error obteniendo lobby:',
+        error,
+      );
 
 
       console.error(
