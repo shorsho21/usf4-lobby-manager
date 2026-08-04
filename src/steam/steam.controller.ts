@@ -16,6 +16,7 @@ export class SteamController {
   async getLobby(
     @Param('discordId') discordId: string,
   ) {
+    console.log("Estoy entrando al endpoint de lobby con discordID: ", discordId);
 
     return this.steamService.getLobby(
       discordId,

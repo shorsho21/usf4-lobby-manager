@@ -29,6 +29,9 @@ export class SteamService {
 
 
     if (!user) {
+      console.log(
+        'Usuario no registrad o no encontrado. Usa /setsteam primero.',
+      );
 
       return {
 
@@ -49,6 +52,10 @@ export class SteamService {
 
 
     try {
+      console.log(
+        'Obteniendo lobby para el usuario con discordID:',
+        discordId,steamProfile
+      );
 
 
       const joinLink =
@@ -59,6 +66,9 @@ export class SteamService {
 
 
       if (!joinLink) {
+        console.log(
+          'No se encontró un lobby activo de Ultra Street Fighter IV.',
+        );
 
         return {
 
@@ -72,8 +82,14 @@ export class SteamService {
       }
 
 
-
+      console.log(
+        'Lobby encontrado para el usuario con discordID:',
+        discordId,
+        'Join Link:',
+        joinLink,
+      );
       return {
+        
 
 
         success: true,
