@@ -13,6 +13,12 @@ export class UsersService {
     const data = fs.readFileSync(this.usersFile, 'utf8');
 
     const users = JSON.parse(data);
+    const supaUser = {
+      discord_id: '',
+      discord_user: '',
+      steam_profile: '',
+      steam_ID: '',
+    };
 
     let steamId = '';
 
@@ -49,24 +55,26 @@ export class UsersService {
       }
     }
 
-    const existingUser = users.find(
-      (user) => user.discordId === body.discordId,
-    );
+    //guardamos los datos en supauser
+    console.log("guardando los datos en local")
 
-    if (existingUser) {
-      existingUser.username = body.username;
-      existingUser.steamProfile = body.steamProfile;
-      existingUser.steamId = steamId;
-    } else {
-      users.push({
-        discordId: body.discordId,
-        username: body.username,
-        steamProfile: body.steamProfile,
-        steamId: steamId,
-      });
+    supaUser.discord_id = body.discordId;
+    supaUser.discord_user = body.discordUser;
+    supaUser.steam_profile = body.steamProfile;
+    supaUser.steam_ID = steamId;
+
+    console.log("Datos a guardar:", supaUser);
+
+    console.log("Guardando usuario en Supabase...");
+    try {
+      await supabase.from('users').upsert([supaUser]);
+    } catch (error) {
+      console.error('Error al guardar el usuario en Supabase:', error);
+      return {
+        success: false,
+        message: 'Error al guardar el usuario en Supabase.',
+      };
     }
-
-    await supabase.from('users').upsert(users);
 
     return {
       success: true,
