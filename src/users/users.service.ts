@@ -59,7 +59,7 @@ export class UsersService {
     console.log("guardando los datos en local")
 
     supaUser.discord_id = body.discordId;
-    supaUser.discord_user = body.discordUser;
+    supaUser.discord_user = body.username;
     supaUser.steam_profile = body.steamProfile;
     supaUser.steam_ID = steamId;
 
