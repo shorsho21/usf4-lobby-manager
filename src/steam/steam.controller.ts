@@ -13,6 +13,7 @@ export class SteamController {
 
 
   @Get('lobby/:discordId')
+  //encuentra el link lobby del usuario con el discordId proporcionado
   async getLobby(
     @Param('discordId') discordId: string,
   ) {
