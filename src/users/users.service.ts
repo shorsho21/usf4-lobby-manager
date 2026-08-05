@@ -3,20 +3,14 @@ import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
+import { supabase } from 'src/supabase';
 
 @Injectable()
 export class UsersService {
-  private usersFile = path.join(
-    process.cwd(),
-    'data',
-    'users.json',
-  );
+  private usersFile = path.join(process.cwd(), 'data', 'users.json');
 
   async createUser(body: any) {
-    const data = fs.readFileSync(
-      this.usersFile,
-      'utf8',
-    );
+    const data = fs.readFileSync(this.usersFile, 'utf8');
 
     const users = JSON.parse(data);
 
@@ -72,10 +66,7 @@ export class UsersService {
       });
     }
 
-    fs.writeFileSync(
-      this.usersFile,
-      JSON.stringify(users, null, 2),
-    );
+    await supabase.from('users').upsert(users);
 
     return {
       success: true,
@@ -83,16 +74,13 @@ export class UsersService {
     };
   }
 
-  getUserByDiscordId(discordId: string) {
-    const data = fs.readFileSync(
-      this.usersFile,
-      'utf8',
-    );
+  async getUserByDiscordId(discordId: string) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('discord_id', discordId)
+      .single();
 
-    const users = JSON.parse(data);
-
-    return users.find(
-      (user) => user.discordId === discordId,
-    );
+    return data;
   }
 }

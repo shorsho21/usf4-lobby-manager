@@ -22,7 +22,7 @@ export class SteamService {
 
 
     const user =
-      this.usersService.getUserByDiscordId(
+      await this.usersService.getUserByDiscordId(
         discordId,
       );
 
@@ -30,7 +30,7 @@ export class SteamService {
 
     if (!user) {
       console.log(
-        'Usuario no registrad o no encontrado. Usa /setsteam primero.',
+        'Usuario no registrado o no encontrado. Usa /setsteam primero.',
       );
 
       return {
@@ -47,7 +47,7 @@ export class SteamService {
 
 
     const steamId =
-      user.steamId;
+      user.steam_ID;
 
 
 
