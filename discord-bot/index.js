@@ -34,7 +34,7 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName('lobby')
-    .setDescription('Busca tu lobby activo de Ultra Street Fighter IV'),
+    .setDescription('Busca tu lobby activo de Steam'),
 
   new SlashCommandBuilder()
     .setName('duel')
@@ -256,7 +256,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           },
           {
             name: '🎮 Juego',
-            value: response.data.game ?? 'Ultra Street Fighter IV',
+            value: response.data.game ?? '',
             inline: true,
           },
           {
@@ -295,7 +295,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         '🥋 `/setsteam <steam_profile>`\n' +
         '→ Guarda tu Steam para poder ayudarte a encontrar partidas.\n\n' +
         '💨 `/lobby`\n' +
-        '→ Busco tu lobby de Ultra Street Fighter IV con mi poder de Kikosho.\n\n' +
+        '→ Busco tu lobby de tus juegos favoritos con mi poder de Kikosho.\n\n' +
         '🥊 `/duel <jugador> <ft>`\n' +
         '→ Desafía a un jugador a una serie First To X.\n\n' +
         '📖 `/help`\n' +
