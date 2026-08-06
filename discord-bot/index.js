@@ -310,9 +310,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
           iconURL: client.user.displayAvatarURL(),
         })
         .setTimestamp();
-        files: [bannerlobby]
+        
 
-      await interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed], files: [bannerlobby] });
     } catch (error) {
       console.error(error.response?.data || error.message);
       await interaction.editReply('❌ Error comunicándose con la API.');
@@ -381,7 +381,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           
         )
         .setImage('attachment://duel-chun-li.png')
-        .setFiles([bannerduel])
+        
 
         .addFields(
           {
@@ -427,6 +427,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await interaction.editReply({
         embeds: [embed],
         components: [buttons],
+        files: [bannerduel]
       });
     } catch (error) {
       console.error(error);
