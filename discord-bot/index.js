@@ -185,7 +185,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             )
             .setFooter({
               text: '🍔 Chun-Burger Challenge • GGWP',
-              iconURL: winner.displayAvatarURL({ size: 128 }),
+              iconURL: client.user.displayAvatarURL()({ size: 128 }),
             })
             .setTimestamp(),
         ],
