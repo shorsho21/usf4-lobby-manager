@@ -155,13 +155,38 @@ client.on(Events.InteractionCreate, async (interaction) => {
         embeds: [
           new EmbedBuilder()
             .setColor(0x22c55e)
-            .setTitle('🏆 DUEL FINALIZADO')
+            .setTitle('🏆  ¡DUEL FINALIZADO!')
             .setDescription(
-              `🥇 ${winner} ganó el **FT${ft}** de **${game}**.\n\n` +
-                `👏 ¡Felicitaciones!\n\n` +
+              `## 🥇 Victoria de ${winner}\n\n` +
+                `🔥 **${winner.username}** se lleva el combate.\n\n` +
+                `🥊 **Formato:** FT${ft}\n` +
+                `🎮 **Juego:** ${game}\n\n` +
+                `━━━━━━━━━━━━━━━━━━\n` +
+                `👏 ¡Felicitaciones campeón!\n\n` +
                 `GG ${loser} 🍔`,
             )
             .setThumbnail(winner.displayAvatarURL({ size: 512 }))
+            .addFields(
+              {
+                name: '🏆 Ganador',
+                value: `${winner}`,
+                inline: true,
+              },
+              {
+                name: '💀 Derrotado',
+                value: `${loser}`,
+                inline: true,
+              },
+              {
+                name: '⚔️ Resultado',
+                value: `FT${ft}`,
+                inline: true,
+              },
+            )
+            .setFooter({
+              text: '🍔 Chun-Burger Challenge • GGWP',
+              iconURL: winner.displayAvatarURL({ size: 128 }),
+            })
             .setTimestamp(),
         ],
       });
