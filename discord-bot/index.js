@@ -139,7 +139,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       // Guardar el registro en Supabase a través del endpoint /users/duels
       try {
-        await axios.post(`${process.env.API_URL}/users/duels`, duelResultPayload);
+        await axios.post(
+          `${process.env.API_URL}/users/duels`,
+          duelResultPayload,
+        );
       } catch (dbError) {
         console.error(
           'Error al guardar el duelo en la API/BD:',
@@ -320,19 +323,53 @@ client.on(Events.InteractionCreate, async (interaction) => {
         'Juego desconocido';
 
       const embed = new EmbedBuilder()
-        .setColor(0xdc2626)
-        .setTitle('🥊 CHUN-BURGER CHALLENGE')
-        .setDescription(
-          `# ${interaction.user.username} 🆚 ${opponent.username}\n\n` +
-            `🥋 ${interaction.user} desafía a ${opponent}\n\n` +
-            `🏆 **Formato:** FT${ft}\n` +
-            `🎮 **Juego:** ${game}`,
-        )
-        .addFields({
-          name: '🔗 Steam Lobby',
-          value: `\`\`\`\n${steamLink}\n\`\`\``,
-        });
 
+        .setColor(0xdc2626)
+
+        .setTitle('⚔️ CHUN-BURGER MATCH')
+
+        .setDescription(
+          `# 🥊 ${interaction.user.username}  🆚  ${opponent.username}\n\n` +
+            `> **"${interaction.user.username}" ha lanzado un desafío.**\n\n` +
+            `🔥 **First To:** FT${ft}\n` +
+            `🎮 **Juego:** ${game}\n` +
+            `📡 **Estado:** 🟢 Lobby disponible`,
+        )
+
+        .setAuthor({
+          name: '🍔 Chun-Burger Matchmaking',
+          iconURL: client.user.displayAvatarURL(),
+        })
+
+        .setThumbnail(
+          interaction.user.displayAvatarURL({
+            size: 512,
+          }),
+        )
+
+        .addFields(
+          {
+            name: '🥊 Retador',
+            value: `${interaction.user}\n` + '🟢 Preparado',
+            inline: true,
+          },
+          {
+            name: '🎯 Retado',
+            value: `${opponent}\n` + '⚔️ Esperando respuesta',
+            inline: true,
+          },
+          {
+            name: '━━━━━━━━━━━━━━━━━━',
+            value: '### 🔗 Steam Lobby\n' + `\`\`\`\n${steamLink}\n\`\`\``,
+          },
+        )
+
+        .setFooter({
+          text: '🍔 Ready? Fight!',
+          iconURL: client.user.displayAvatarURL(),
+        })
+
+        .setTimestamp();
       const encodedGame = encodeURIComponent(game);
 
       const buttons = new ActionRowBuilder().addComponents(
