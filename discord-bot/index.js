@@ -151,7 +151,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await interaction.editReply(
           `🍔💨 ¡Kikosho fallido... 🥺!\n\n` +
             `🥺 No pude encontrar tu hamburguesa... quiero decir tu lobby:\n` +
-            `${response.data.message}\n\n` +
             `🌱 Abre tu sala de ${response.data.gameextrainfo} y volveré a buscarla por ti, luchador. 🥊`,
         );
         return;
