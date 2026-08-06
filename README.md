@@ -1,98 +1,174 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🍔 Chun-Burger — USF IV Lobby Manager
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> Organizá partidas de **Ultra Street Fighter IV** desde Discord: guardá tu perfil de Steam, compartí tu lobby activo y resolvé desafíos FT sin salir del servidor.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+[![NestJS](https://img.shields.io/badge/API-NestJS-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![Discord.js](https://img.shields.io/badge/Bot-discord.js-5865F2?logo=discord&logoColor=white)](https://discord.js.org/)
+[![Node.js](https://img.shields.io/badge/Runtime-Node.js-5FA04E?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com/)
 
-## Description
+## ¿Qué hace?
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Chun-Burger conecta a la comunidad de USF IV con Steam y Discord para reducir el tiempo entre el “¿jugamos?” y el “¡fight!”. El proyecto se compone de dos servicios:
 
-## Project setup
+| Componente | Tecnología | Responsabilidad |
+| --- | --- | --- |
+| API | NestJS + TypeScript | Persiste usuarios y duelos, resuelve perfiles de Steam y encuentra lobbies activos. |
+| Bot | Node.js + discord.js | Ofrece comandos de Discord, publica lobbies y gestiona desafíos. |
 
-```bash
-$ npm install
+```text
+Discord ──► Bot ──► API NestJS ──► Supabase
+                 │
+                 └──────────────► Steam Web API
 ```
 
-## Compile and run the project
+## Funcionalidades
+
+- Vinculación de perfiles de Steam mediante URL numérica o vanity URL.
+- Búsqueda de lobby activo de **Ultra Street Fighter IV**.
+- Publicación del enlace de unión directamente en Discord.
+- Desafíos `First To X` con botones para registrar al ganador.
+- Historial de duelos guardado en Supabase.
+
+## Requisitos
+
+- Node.js 20 o superior recomendado.
+- Una aplicación de Discord y su token de bot.
+- Una clave de [Steam Web API](https://steamcommunity.com/dev/apikey).
+- Un proyecto de Supabase con las tablas `users` y `duel_history`.
+
+## Instalación
+
+Cloná el repositorio e instalá las dependencias de cada servicio:
 
 ```bash
-# development
-$ npm run start
+git clone <URL_DEL_REPOSITORIO>
+cd usf4-lobby-manager
 
-# watch mode
-$ npm run start:dev
+# API
+npm install
 
-# production mode
-$ npm run start:prod
+# Bot
+cd discord-bot
+npm install
 ```
 
-## Run tests
+## Configuración
+
+Creá un archivo `.env` en la raíz para la API:
+
+```env
+# Puerto de NestJS (por defecto: 3000)
+PORT=3000
+
+# Steam Web API
+STEAM_API_KEY=tu_clave_de_steam
+
+# Supabase
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_KEY=tu_clave_de_supabase
+```
+
+Luego creá `discord-bot/.env` para el bot:
+
+```env
+DISCORD_BOT_TOKEN=tu_token_de_discord
+
+# URL pública o local de la API NestJS
+API_URL=http://localhost:3000
+
+# Puerto del pequeño servidor HTTP del bot.
+# Usá uno diferente al de la API si corrés ambos localmente.
+PORT=3001
+```
+
+> No subas archivos `.env`: contienen credenciales y ya están excluidos por `.gitignore`.
+
+## Ejecutar el proyecto
+
+Iniciá primero la API, desde la raíz del repositorio:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run start:dev
 ```
 
-## Deployment
+La API queda disponible en `http://localhost:3000` de forma predeterminada.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+En otra terminal, iniciá el bot:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+cd discord-bot
+node index.js
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Al conectarse, el bot registra automáticamente sus slash commands en Discord.
 
-## Resources
+## Comandos de Discord
 
-Check out a few resources that may come in handy when working with NestJS:
+| Comando | Descripción |
+| --- | --- |
+| `/setsteam <steam_profile>` | Guarda el enlace o ID de tu perfil de Steam. |
+| `/lobby` | Busca y comparte tu lobby activo de USF IV. |
+| `/duel <jugador> <ft>` | Reta a alguien a una serie First To X. |
+| `/help` | Muestra la ayuda dentro de Discord. |
+| `/about` | Presenta a Chun-Burger. |
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Cuando termina un duelo, cualquiera de los dos botones de ganador registra el resultado en la API y deshabilita la selección para evitar duplicados.
 
-## Support
+## Endpoints de la API
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+| Método | Ruta | Descripción |
+| --- | --- | --- |
+| `GET` | `/` | Estado básico de la API. |
+| `POST` | `/users` | Crea o actualiza la relación entre usuario de Discord y perfil de Steam. |
+| `GET` | `/steam/lobby/:discordId` | Devuelve el lobby activo asociado al usuario. |
+| `POST` | `/users/duels` | Guarda el resultado de un desafío. |
 
-## Stay in touch
+Ejemplo para registrar un perfil:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+curl -X POST http://localhost:3000/users \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "discordId": "123456789",
+    "discordUser": "chunli",
+    "steamProfile": "https://steamcommunity.com/id/mi-perfil"
+  }'
+```
 
-## License
+## Base de datos
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+La API espera, como mínimo, estas columnas:
+
+- `users`: `discord_id`, `discord_user`, `steam_profile`, `steam_ID`.
+- `duel_history`: `challenger_discord_id`, `opponent_discord_id`, `winner_discord_id`, `ft`, `game`.
+
+Conviene definir una restricción única para `users.discord_id`, así `upsert` puede actualizar correctamente el perfil de cada jugador.
+
+## Scripts de la API
+
+| Comando | Acción |
+| --- | --- |
+| `npm run start:dev` | Inicia NestJS en modo desarrollo con recarga. |
+| `npm run build` | Compila la API en `dist/`. |
+| `npm run start:prod` | Ejecuta la versión compilada. |
+| `npm run test` | Corre los tests unitarios. |
+| `npm run test:e2e` | Corre los tests end-to-end. |
+| `npm run lint` | Revisa y corrige el estilo con ESLint. |
+
+## Estructura
+
+```text
+.
+├── src/
+│   ├── steam/              # Steam Web API, scraping y consulta de lobbies
+│   ├── users/              # Usuarios y registro de duelos
+│   └── supabase.ts         # Cliente de Supabase
+├── discord-bot/
+│   └── index.js            # Comandos e interacciones de Discord
+└── test/                   # Pruebas e2e de la API
+```
+
+---
+
+Hecho con ❤️ para que haya menos tiempo buscando salas y más **Hadoukens, Kikoshos y GG**. 🥊
