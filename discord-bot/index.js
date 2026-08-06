@@ -9,9 +9,12 @@ const {
   REST,
   Routes,
   SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } = require('discord.js');
 const axios = require('axios');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
@@ -76,7 +79,6 @@ client.once(Events.ClientReady, async () => {
 
   try {
     console.log('Registrando Slash Commands...');
-    // Registro global de comandos
     await rest.put(Routes.applicationCommands(client.user.id), {
       body: commands,
     });
@@ -88,10 +90,60 @@ client.once(Events.ClientReady, async () => {
 
 /*
   ====================================
-     MANEJO DE INTERACCIONES (SLASH)
+     MANEJO DE INTERACCIONES
   ====================================
 */
 client.on(Events.InteractionCreate, async (interaction) => {
+
+  /*
+    ------------------------------------
+          MANEJO DE BOTONES
+    ------------------------------------
+  */
+  if (interaction.isButton()) {
+    if (!interaction.customId.startsWith('duel_winner_')) return;
+
+    const data = interaction.customId.split('_');
+    const winnerId = data[2];
+    const loserId = data[3];
+
+    try {
+      const winner = await client.users.fetch(winnerId);
+      const loser = await client.users.fetch(loserId);
+
+      // Deshabilitar los botones de la interacción
+      const row = ActionRowBuilder.from(interaction.message.components[0]);
+      row.components.forEach((button) => button.setDisabled(true));
+
+      await interaction.update({
+        components: [row],
+      });
+
+      await interaction.followUp({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0x22c55e)
+            .setTitle('🏆 DUEL FINALIZADO')
+            .setDescription(
+              `🥇 ${winner} ganó el FT.\n\n` +
+                `👏 ¡Felicitaciones!\n\n` +
+                `GG ${loser} 🍔`,
+            )
+            .setThumbnail(winner.displayAvatarURL({ size: 512 }))
+            .setTimestamp(),
+        ],
+      });
+    } catch (error) {
+      console.error('Error procesando botón de duelo:', error);
+    }
+    return;
+  }
+
+  /*
+    ------------------------------------
+       MANEJO DE SLASH COMMANDS
+    ------------------------------------
+  */
   if (!interaction.isChatInputCommand()) return;
 
   const { commandName } = interaction;
@@ -119,17 +171,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
       } else {
         await interaction.reply({
-          content:
-            '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
+          content: '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
           ephemeral: true,
         });
       }
     } catch (error) {
       console.error(error.response?.data || error.message);
-      await interaction.reply({
-        content: '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
-        ephemeral: true,
-      });
+      if (!interaction.replied) {
+        await interaction.reply({
+          content: '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
+          ephemeral: true,
+        });
+      }
     }
     return;
   }
@@ -140,7 +193,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
     ====================================
   */
   if (commandName === 'lobby') {
-    // Deducimos respuesta mientras consultamos la API
     await interaction.deferReply();
 
     try {
@@ -148,11 +200,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
         `${process.env.API_URL}/steam/lobby/${interaction.user.id}`,
       );
 
+      const gameName = response.data.game || response.data.gameextrainfo || 'Juego';
+
       if (!response.data.success) {
         await interaction.editReply(
           `🍔💨 ¡Kikosho fallido... 🥺!\n\n` +
             `🥺 No pude encontrar tu hamburguesa... quiero decir tu lobby:\n` +
-            `🌱 Abre tu sala de ${response.data.gameextrainfo} y volveré a buscarla por ti, luchador. 🥊`,
+            `🌱 Abre tu sala de **${gameName}** y volveré a buscarla por ti, luchador. 🥊`,
         );
         return;
       }
@@ -160,10 +214,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const steamLink = response.data.joinLink;
 
       const embed = new EmbedBuilder()
-        .setTitle(
-          '🥊 Lobby ' + response.data.game ||
-            response.data.gameextrainfo + ' activo',
-        )
+        .setTitle(`🥊 Lobby de ${gameName} activo`)
         .setDescription(
           'Un nuevo lobby está disponible.\n\n' +
             '🎮 **Link de conexión:**\n' +
@@ -182,13 +233,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
           },
           {
             name: '🎮 Juego',
-            value: response.data.game || response.data.gameextrainfo,
+            value: gameName,
             inline: true,
           },
           { name: '🟢 Estado', value: 'Lobby activo', inline: true },
         )
         .setFooter({
-          text: 'Chun Burger bot • ' + response.data.gameextrainfo,
+          text: `Chun Burger bot • ${gameName}`,
           iconURL: client.user.displayAvatarURL(),
         })
         .setTimestamp();
@@ -233,17 +284,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const steamLink = response.data.joinLink;
 
       const embed = new EmbedBuilder()
-
         .setColor(0xdc2626)
-
         .setTitle('🥊 CHUN-BURGER CHALLENGE')
-
         .setDescription(
           `# ${interaction.user.username} 🆚 ${opponent.username}\n\n` +
             `🥋 ${interaction.user} desafía a ${opponent}\n\n` +
             `🏆 FT${ft}`,
         )
-
         .addFields({
           name: '🔗 Steam Lobby',
           value: `\`\`\`\n${steamLink}\n\`\`\``,
@@ -251,78 +298,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       const buttons = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-
           .setCustomId(`duel_winner_${interaction.user.id}_${opponent.id}`)
-
           .setLabel(`🏆 ${interaction.user.username}`)
-
           .setStyle(ButtonStyle.Success),
 
         new ButtonBuilder()
-
           .setCustomId(`duel_winner_${opponent.id}_${interaction.user.id}`)
-
           .setLabel(`🏆 ${opponent.username}`)
-
           .setStyle(ButtonStyle.Primary),
       );
 
       await interaction.editReply({
         embeds: [embed],
-
         components: [buttons],
       });
     } catch (error) {
       console.error(error);
-
       await interaction.editReply('❌ Error al crear el duelo.');
     }
-  }
-  if (interaction.isButton()) {
-    if (!interaction.customId.startsWith('duel_winner_')) {
-      return;
-    }
-
-    const data = interaction.customId.split('_');
-
-    const winnerId = data[2];
-    const loserId = data[3];
-
-    const winner = await client.users.fetch(winnerId);
-    const loser = await client.users.fetch(loserId);
-
-    // Deshabilitar botones
-    const row = ActionRowBuilder.from(interaction.message.components[0]);
-
-    row.components.forEach((button) => button.setDisabled(true));
-
-    await interaction.update({
-      components: [row],
-    });
-
-    await interaction.followUp({
-      embeds: [
-        new EmbedBuilder()
-
-          .setColor(0x22c55e)
-
-          .setTitle('🏆 DUEL FINALIZADO')
-
-          .setDescription(
-            `🥇 ${winner} ganó el FT.\n\n` +
-              `👏 ¡Felicitaciones!\n\n` +
-              `GG ${loser} 🍔`,
-          )
-
-          .setThumbnail(
-            winner.displayAvatarURL({
-              size: 512,
-            }),
-          )
-
-          .setTimestamp(),
-      ],
-    });
+    return;
   }
 
   /*
