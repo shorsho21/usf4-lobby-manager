@@ -6,62 +6,129 @@ const {
   GatewayIntentBits,
   EmbedBuilder,
   Events,
+  REST,
+  Routes,
+  SlashCommandBuilder,
 } = require('discord.js');
 const axios = require('axios');
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
+  intents: [GatewayIntentBits.Guilds],
 });
 
-// Evento de inicio corregido (Events.ClientReady o 'ready')
-client.once(Events.ClientReady, () => {
+/*
+  ====================================
+      DEFINICIÓN DE SLASH COMMANDS
+  ====================================
+*/
+const commands = [
+  new SlashCommandBuilder()
+    .setName('setsteam')
+    .setDescription('Guarda tu perfil de Steam en Chun-Burger')
+    .addStringOption((option) =>
+      option
+        .setName('steam_profile')
+        .setDescription('Tu enlace o ID de perfil de Steam')
+        .setRequired(true),
+    ),
+
+  new SlashCommandBuilder()
+    .setName('lobby')
+    .setDescription('Busca tu lobby activo de Ultra Street Fighter IV'),
+
+  new SlashCommandBuilder()
+    .setName('duel')
+    .setDescription('Reta a otro jugador a una serie FT (First To X)')
+    .addUserOption((option) =>
+      option
+        .setName('jugador')
+        .setDescription('El jugador al que deseas retar')
+        .setRequired(true),
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName('ft')
+        .setDescription('Formato de la serie (ej: 3 para FT3)')
+        .setRequired(true)
+        .setMinValue(1),
+    ),
+
+  new SlashCommandBuilder()
+    .setName('help')
+    .setDescription('Muestra la lista de comandos disponibles'),
+
+  new SlashCommandBuilder()
+    .setName('about')
+    .setDescription('Información sobre Chun-Burger Bot'),
+].map((cmd) => cmd.toJSON());
+
+/*
+  ====================================
+        REGISTRO Y READY EVENT
+  ====================================
+*/
+client.once(Events.ClientReady, async () => {
   console.log(`Bot conectado como ${client.user.tag}`);
+
+  const rest = new REST({ version: '10' }).setToken(
+    process.env.DISCORD_BOT_TOKEN,
+  );
+
+  try {
+    console.log('Registrando Slash Commands...');
+    // Registro global de comandos
+    await rest.put(Routes.applicationCommands(client.user.id), {
+      body: commands,
+    });
+    console.log('¡Slash Commands registrados correctamente!');
+  } catch (error) {
+    console.error('Error al registrar Slash Commands:', error);
+  }
 });
 
-client.on('messageCreate', async (message) => {
-  // Ignorar bots y mensajes que no empiecen con '/'
-  if (message.author.bot || !message.content.startsWith('/')) return;
+/*
+  ====================================
+     MANEJO DE INTERACCIONES (SLASH)
+  ====================================
+*/
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
 
-  // Separar el comando y sus argumentos
-  const args = message.content.slice(1).trim().split(/\s+/);
-  const command = args.shift().toLowerCase();
+  const { commandName } = interaction;
 
   /*
     ====================================
             COMANDO SETSTEAM
     ====================================
   */
-  if (command === 'setsteam') {
-    const steamProfile = args[0];
-
-    if (!steamProfile) {
-      await message.reply('❌ Uso correcto: `/setsteam <steam_profile>`');
-      return;
-    }
+  if (commandName === 'setsteam') {
+    const steamProfile = interaction.options.getString('steam_profile');
 
     try {
       const response = await axios.post(`${process.env.API_URL}/users`, {
-        discordId: message.author.id,
-        username: message.author.username,
+        discordId: interaction.user.id,
+        username: interaction.user.username,
         steamProfile: steamProfile,
       });
 
       if (response.data.success) {
-        await message.reply(
+        await interaction.reply(
           `🍔🌸 ¡Listo luchador! Guardé tu perfil de Steam.\n\n` +
             `🎮 ${steamProfile}\n\n` +
             `Ahora Chun-Burger podrá encontrar tus lobbies cuando quieras 🥊✨`,
         );
+      } else {
+        await interaction.reply({
+          content: '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
+          ephemeral: true,
+        });
       }
     } catch (error) {
       console.error(error.response?.data || error.message);
-      await message.reply(
-        '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
-      );
+      await interaction.reply({
+        content: '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
+        ephemeral: true,
+      });
     }
     return;
   }
@@ -71,18 +138,17 @@ client.on('messageCreate', async (message) => {
               COMANDO LOBBY
     ====================================
   */
-  if (command === 'lobby') {
-    try {
-      await message.reply(
-        '🍔 Voy a buscar tu hamburguesa... digo, tu lobby 😋',
-      );
+  if (commandName === 'lobby') {
+    // Deducimos respuesta mientras consultamos la API
+    await interaction.deferReply();
 
+    try {
       const response = await axios.get(
-        `${process.env.API_URL}/steam/lobby/${message.author.id}`,
+        `${process.env.API_URL}/steam/lobby/${interaction.user.id}`,
       );
 
       if (!response.data.success) {
-        await message.reply(
+        await interaction.editReply(
           `🍔💨 ¡Kikosho fallido... 🥺!\n\n` +
             `🥺 No pude encontrar tu hamburguesa... quiero decir tu lobby:\n` +
             `${response.data.message}\n\n` +
@@ -101,14 +167,14 @@ client.on('messageCreate', async (message) => {
             `\`\`\`\n${steamLink}\n\`\`\``,
         )
         .setAuthor({
-          name: `${message.author.username} creó el lobby`,
-          iconURL: message.author.displayAvatarURL({ size: 256 }),
+          name: `${interaction.user.username} creó el lobby`,
+          iconURL: interaction.user.displayAvatarURL({ size: 256 }),
         })
-        .setThumbnail(message.author.displayAvatarURL({ size: 256 }))
+        .setThumbnail(interaction.user.displayAvatarURL({ size: 256 }))
         .addFields(
           {
             name: '👤 Jugador',
-            value: `<@${message.author.id}>`,
+            value: `<@${interaction.user.id}>`,
             inline: true,
           },
           {
@@ -124,10 +190,10 @@ client.on('messageCreate', async (message) => {
         })
         .setTimestamp();
 
-      await message.reply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     } catch (error) {
       console.error(error.response?.data || error.message);
-      await message.reply('❌ Error comunicándose con la API.');
+      await interaction.editReply('❌ Error comunicándose con la API.');
     }
     return;
   }
@@ -137,135 +203,84 @@ client.on('messageCreate', async (message) => {
               COMANDO DUEL
     ====================================
   */
-  if (command === 'duel') {
-    const opponent = message.mentions.users.first();
+  if (commandName === 'duel') {
+    const opponent = interaction.options.getUser('jugador');
+    const ft = interaction.options.getInteger('ft');
 
-    const ft = Number(args[1]);
-
-    if (!opponent || Number.isNaN(ft)) {
-      await message.reply(
-        '❌ Uso correcto: `/duel @jugador <FT>`\nEjemplo: `/duel @Shorsho 3`',
-      );
-
-      return;
-    }
+    await interaction.deferReply();
 
     try {
       const response = await axios.get(
-        `${process.env.API_URL}/steam/lobby/${message.author.id}`,
+        `${process.env.API_URL}/steam/lobby/${interaction.user.id}`,
       );
 
       if (!response.data.success) {
-        await message.reply(
+        await interaction.editReply(
           '❌ No se pudo crear el desafío porque no tienes un lobby activo en Steam.',
         );
-
         return;
       }
 
       const steamLink = response.data.joinLink;
 
       const embed = new EmbedBuilder()
-
         .setColor(0xdc2626)
-
         .setTitle('⚔️ CHALLENGE')
-
         .setDescription(
-          `# ${message.author.username} 🆚 ${opponent.username}
-
-**${message.author}** ha retado a **${opponent}**
-
-🏆 **Formato:** FT${ft}
-
-━━━━━━━━━━━━━━━━━━━━━━`,
+          `# ${interaction.user.username} 🆚 ${opponent.username}\n\n` +
+            `**${interaction.user}** ha retado a **${opponent}**\n\n` +
+            `🏆 **Formato:** FT${ft}\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━`,
         )
-
         .setAuthor({
           name: 'Chun-Burger Matchmaking',
-
           iconURL: client.user.displayAvatarURL(),
         })
-
         .setThumbnail(
-          message.author.displayAvatarURL({
-            size: 512,
-          }),
+          interaction.user.displayAvatarURL({ size: 512 }),
         )
-
         .addFields(
           {
             name: '🥊 Retador',
-
-            value: `${message.author}
-
-🟢 Listo para pelear`,
-
+            value: `${interaction.user}\n\n🟢 Listo para pelear`,
             inline: true,
           },
-
           {
             name: '🎯 Retado',
-
-            value: `${opponent}
-
-🟡 Esperando respuesta`,
-
+            value: `${opponent}\n\n🟡 Esperando respuesta`,
             inline: true,
           },
-
           {
             name: '🏆 Serie',
-
             value: `FT${ft}`,
-
             inline: true,
           },
-
           {
             name: '🎮 Juego',
-
             value: response.data.game ?? 'Ultra Street Fighter IV',
-
             inline: true,
           },
-
           {
             name: '📡 Estado',
-
             value: 'Lobby disponible',
-
             inline: true,
           },
-
           {
             name: '🔗 Steam Lobby',
-
-            value: `💨 Haz clic o copia el siguiente enlace:
-
-\`\`\`
-${steamLink}
-\`\`\``,
+            value: `💨 Haz clic o copia el siguiente enlace:\n\n\`\`\`\n${steamLink}\n\`\`\``,
           },
         )
-
         .setFooter({
           text: '🍔 Chun-Burger • Ready? Fight!',
-
           iconURL: client.user.displayAvatarURL(),
         })
-
         .setTimestamp();
 
-      await message.reply({
-        embeds: [embed],
-      });
+      await interaction.editReply({ embeds: [embed] });
     } catch (error) {
       console.error(error.response?.data || error.message);
-
-      await message.reply('❌ Error al procesar el desafío.');
+      await interaction.editReply('❌ Error al procesar el desafío.');
     }
-
     return;
   }
 
@@ -274,15 +289,15 @@ ${steamLink}
               COMANDO HELP
     ====================================
   */
-  if (command === 'help') {
-    await message.reply(
+  if (commandName === 'help') {
+    await interaction.reply(
       '🍔🌸 **Chun-Burger Command List** 🥊\n\n' +
         '✨ ¡Konnichiwa, luchador! Estos son mis movimientos especiales:\n\n' +
-        '🥋 `/setsteam <link_de_steam>`\n' +
+        '🥋 `/setsteam <steam_profile>`\n' +
         '→ Guarda tu Steam para poder ayudarte a encontrar partidas.\n\n' +
         '💨 `/lobby`\n' +
         '→ Busco tu lobby de Ultra Street Fighter IV con mi poder de Kikosho.\n\n' +
-        '🥊 `/duel @jugador <FT>`\n' +
+        '🥊 `/duel <jugador> <ft>`\n' +
         '→ Desafía a un jugador a una serie First To X.\n\n' +
         '📖 `/help`\n' +
         '→ Te muestro todos mis comandos disponibles.\n\n' +
@@ -298,8 +313,8 @@ ${steamLink}
               COMANDO ABOUT
     ====================================
   */
-  if (command === 'about') {
-    await message.reply(
+  if (commandName === 'about') {
+    await interaction.reply(
       '🍔 **Chun-Burger Bot**\n\n' +
         '🌸 ¡Konnichiwa, luchador! Soy Chun-Burger 🥊✨\n\n' +
         'Mi trabajo es ayudarte a crear y encontrar lobbies de **Ultra Street Fighter IV** 🍔\n\n' +
@@ -329,3 +344,4 @@ app.listen(PORT, () => {
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN);
+
