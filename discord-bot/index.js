@@ -160,7 +160,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const steamLink = response.data.joinLink;
 
       const embed = new EmbedBuilder()
-        .setTitle('🥊 Lobby ' + response.data.gameextrainfo)
+        .setTitle(
+          '🥊 Lobby ' + response.data.game ||
+            response.data.gameextrainfo + ' activo',
+        )
         .setDescription(
           'Un nuevo lobby está disponible.\n\n' +
             '🎮 **Link de conexión:**\n' +
@@ -209,10 +212,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     if (opponent.id === interaction.user.id) {
       await interaction.reply({
-        content: '😂 No puedes retarte a ti mismo, luchador.',
+        content: '😂 No puedes retarte a ti mismo.',
         ephemeral: true,
       });
-
       return;
     }
 
@@ -224,20 +226,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
       );
 
       if (!response.data.success) {
-        await interaction.editReply(
-          '❌ No se pudo crear el desafío porque no tienes un lobby activo en Steam.',
-        );
-
+        await interaction.editReply('❌ No tienes un lobby activo.');
         return;
       }
 
       const steamLink = response.data.joinLink;
-
-      /*
-      ===============================
-          EMBED DEL DESAFÍO
-      ===============================
-    */
 
       const embed = new EmbedBuilder()
 
@@ -247,72 +240,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         .setDescription(
           `# ${interaction.user.username} 🆚 ${opponent.username}\n\n` +
-            `🥋 **${interaction.user}** ha retado a **${opponent}**\n\n` +
-            `🏆 Formato: **FT${ft}**\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━`,
+            `🥋 ${interaction.user} desafía a ${opponent}\n\n` +
+            `🏆 FT${ft}`,
         )
 
-        .setAuthor({
-          name: '🍔 Chun-Burger Matchmaking',
-          iconURL: client.user.displayAvatarURL(),
-        })
-
-        .setThumbnail(
-          interaction.user.displayAvatarURL({
-            size: 512,
-          }),
-        )
-
-        .addFields(
-          {
-            name: '🥊 Retador',
-            value: `${interaction.user}\n` + `🟢 Listo para pelear`,
-            inline: true,
-          },
-
-          {
-            name: '🎯 Retado',
-            value: `${opponent}\n` + `🟡 Esperando combate`,
-            inline: true,
-          },
-
-          {
-            name: '🏆 Serie',
-            value: `FT${ft}`,
-            inline: true,
-          },
-
-          {
-            name: '🎮 Juego',
-            value: response.data.game || 'Ultra Street Fighter IV',
-            inline: true,
-          },
-
-          {
-            name: '📡 Estado',
-            value: '🔥 Lobby activo',
-            inline: true,
-          },
-
-          {
-            name: '🔗 Steam Lobby',
-            value: `Haz clic o copia:\n\n` + `\`\`\`\n${steamLink}\n\`\`\``,
-          },
-        )
-
-        .setFooter({
-          text: '🍔 Chun-Burger • Ready? Fight!',
-
-          iconURL: client.user.displayAvatarURL(),
-        })
-
-        .setTimestamp();
-
-      /*
-      ===============================
-          BOTONES DE RESULTADO
-      ===============================
-    */
+        .addFields({
+          name: '🔗 Steam Lobby',
+          value: `\`\`\`\n${steamLink}\n\`\`\``,
+        });
 
       const buttons = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -338,12 +273,56 @@ client.on(Events.InteractionCreate, async (interaction) => {
         components: [buttons],
       });
     } catch (error) {
-      console.error(error.response?.data || error.message);
+      console.error(error);
 
-      await interaction.editReply('❌ Error al procesar el desafío.');
+      await interaction.editReply('❌ Error al crear el duelo.');
+    }
+  }
+  if (interaction.isButton()) {
+    if (!interaction.customId.startsWith('duel_winner_')) {
+      return;
     }
 
-    return;
+    const data = interaction.customId.split('_');
+
+    const winnerId = data[2];
+    const loserId = data[3];
+
+    const winner = await client.users.fetch(winnerId);
+    const loser = await client.users.fetch(loserId);
+
+    // Deshabilitar botones
+    const row = ActionRowBuilder.from(interaction.message.components[0]);
+
+    row.components.forEach((button) => button.setDisabled(true));
+
+    await interaction.update({
+      components: [row],
+    });
+
+    await interaction.followUp({
+      embeds: [
+        new EmbedBuilder()
+
+          .setColor(0x22c55e)
+
+          .setTitle('🏆 DUEL FINALIZADO')
+
+          .setDescription(
+            `🥇 ${winner} ganó el FT.\n\n` +
+              `👏 ¡Felicitaciones!\n\n` +
+              `GG ${loser} 🍔`,
+          )
+
+          .setThumbnail(
+            winner.displayAvatarURL({
+              size: 512,
+            }),
+          )
+
+          .setTimestamp(),
+      ],
+    });
   }
 
   /*
