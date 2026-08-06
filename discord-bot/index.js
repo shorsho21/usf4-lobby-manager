@@ -11,15 +11,7 @@ const {
   SlashCommandBuilder,
 } = require('discord.js');
 const axios = require('axios');
-const {
-  Client,
-  GatewayIntentBits,
-  EmbedBuilder,
-  Events,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-} = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
