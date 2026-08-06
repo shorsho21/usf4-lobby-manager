@@ -21,7 +21,8 @@ const client = new Client({
 });
 
 const banner = new AttachmentBuilder('./assets/banners/banner-chun-li.png');
-
+const bannerlobby = new AttachmentBuilder('./assets/banners/lobby-chun-li.png'); 
+const bannerduel = new AttachmentBuilder('./assets/banners/duel-chun-li.png');
 /*
   ====================================
       DEFINICIÓN DE SLASH COMMANDS
@@ -290,6 +291,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           iconURL: interaction.user.displayAvatarURL({ size: 256 }),
         })
         .setThumbnail(interaction.user.displayAvatarURL({ size: 256 }))
+        .setImage('attachment://lobby-chun-li.png')
         .addFields(
           {
             name: '👤 Jugador',
@@ -308,6 +310,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           iconURL: client.user.displayAvatarURL(),
         })
         .setTimestamp();
+        files: [bannerlobby]
 
       await interaction.editReply({ embeds: [embed] });
     } catch (error) {
@@ -361,7 +364,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .setDescription(
           `# 🥊 ${interaction.user.username}  🆚  ${opponent.username}\n\n` +
             `> **"${interaction.user.username}" ha lanzado un desafío.**\n\n` +
-            `🔥 **First To:** FT${ft}\n` +
+            `🔥 **First To:**${ft}\n` +
             `🎮 **Juego:** ${game}\n` +
             `📡 **Estado:** 🟢 Lobby disponible`,
         )
@@ -375,7 +378,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
           interaction.user.displayAvatarURL({
             size: 512,
           }),
+          
         )
+        .setImage('attachment://duel-chun-li.png')
+        .setFiles([bannerduel])
 
         .addFields(
           {
