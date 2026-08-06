@@ -12,12 +12,15 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  AttachmentBuilder,
 } = require('discord.js');
 const axios = require('axios');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
+
+const banner = new AttachmentBuilder('./assets/banners/banner-chun-li.png');
 
 /*
   ====================================
@@ -166,6 +169,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 `GG ${loser} 🍔`,
             )
             .setThumbnail(winner.displayAvatarURL({ size: 512 }))
+            .setImage('attachment://banner-chun-li.png')
             .addFields(
               {
                 name: '🏆 Ganador',
@@ -185,10 +189,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
             )
             .setFooter({
               text: '🍔 Chun-Burger Challenge • GGWP',
-              iconURL: client.user.displayAvatarURL()({ size: 128 }),
+              iconURL: client.user.displayAvatarURL({ size: 128 }),
             })
             .setTimestamp(),
         ],
+        files: [banner],
       });
     } catch (error) {
       console.error('Error procesando el resultado del duelo:', error);
