@@ -11,7 +11,15 @@ const {
   SlashCommandBuilder,
 } = require('discord.js');
 const axios = require('axios');
-
+const {
+  Client,
+  GatewayIntentBits,
+  EmbedBuilder,
+  Events,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require('discord.js');
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
@@ -119,7 +127,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
       } else {
         await interaction.reply({
-          content: '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
+          content:
+            '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
           ephemeral: true,
         });
       }
@@ -159,7 +168,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const steamLink = response.data.joinLink;
 
       const embed = new EmbedBuilder()
-        .setTitle('🥊 Lobby '+response.data.gameextrainfo)
+        .setTitle('🥊 Lobby ' + response.data.gameextrainfo)
         .setDescription(
           'Un nuevo lobby está disponible.\n\n' +
             '🎮 **Link de conexión:**\n' +
@@ -184,7 +193,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           { name: '🟢 Estado', value: 'Lobby activo', inline: true },
         )
         .setFooter({
-          text: 'Chun Burger bot • ' + (response.data.gameextrainfo ),
+          text: 'Chun Burger bot • ' + response.data.gameextrainfo,
           iconURL: client.user.displayAvatarURL(),
         })
         .setTimestamp();
@@ -206,6 +215,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
     const opponent = interaction.options.getUser('jugador');
     const ft = interaction.options.getInteger('ft');
 
+    if (opponent.id === interaction.user.id) {
+      await interaction.reply({
+        content: '😂 No puedes retarte a ti mismo, luchador.',
+        ephemeral: true,
+      });
+
+      return;
+    }
+
     await interaction.deferReply();
 
     try {
@@ -217,69 +235,122 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await interaction.editReply(
           '❌ No se pudo crear el desafío porque no tienes un lobby activo en Steam.',
         );
+
         return;
       }
 
       const steamLink = response.data.joinLink;
 
+      /*
+      ===============================
+          EMBED DEL DESAFÍO
+      ===============================
+    */
+
       const embed = new EmbedBuilder()
+
         .setColor(0xdc2626)
-        .setTitle('⚔️ CHALLENGE')
+
+        .setTitle('🥊 CHUN-BURGER CHALLENGE')
+
         .setDescription(
           `# ${interaction.user.username} 🆚 ${opponent.username}\n\n` +
-            `**${interaction.user}** ha retado a **${opponent}**\n\n` +
-            `🏆 **Formato:** FT${ft}\n\n` +
+            `🥋 **${interaction.user}** ha retado a **${opponent}**\n\n` +
+            `🏆 Formato: **FT${ft}**\n\n` +
             `━━━━━━━━━━━━━━━━━━━━━━`,
         )
+
         .setAuthor({
-          name: 'Chun-Burger Matchmaking',
+          name: '🍔 Chun-Burger Matchmaking',
           iconURL: client.user.displayAvatarURL(),
         })
+
         .setThumbnail(
-          interaction.user.displayAvatarURL({ size: 512 }),
+          interaction.user.displayAvatarURL({
+            size: 512,
+          }),
         )
+
         .addFields(
           {
             name: '🥊 Retador',
-            value: `${interaction.user}\n\n🟢 Listo para pelear`,
+            value: `${interaction.user}\n` + `🟢 Listo para pelear`,
             inline: true,
           },
+
           {
             name: '🎯 Retado',
-            value: `${opponent}\n\n🟡 Esperando respuesta`,
+            value: `${opponent}\n` + `🟡 Esperando combate`,
             inline: true,
           },
+
           {
             name: '🏆 Serie',
             value: `FT${ft}`,
             inline: true,
           },
+
           {
             name: '🎮 Juego',
-            value: response.data.game ?? '',
+            value: response.data.game || 'Ultra Street Fighter IV',
             inline: true,
           },
+
           {
             name: '📡 Estado',
-            value: 'Lobby disponible',
+            value: '🔥 Lobby activo',
             inline: true,
           },
+
           {
             name: '🔗 Steam Lobby',
-            value: `💨 Haz clic o copia el siguiente enlace:\n\n\`\`\`\n${steamLink}\n\`\`\``,
+            value: `Haz clic o copia:\n\n` + `\`\`\`\n${steamLink}\n\`\`\``,
           },
         )
+
         .setFooter({
           text: '🍔 Chun-Burger • Ready? Fight!',
+
           iconURL: client.user.displayAvatarURL(),
         })
+
         .setTimestamp();
 
-      await interaction.editReply({ embeds: [embed] });
+      /*
+      ===============================
+          BOTONES DE RESULTADO
+      ===============================
+    */
+
+      const buttons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+
+          .setCustomId(`duel_winner_${interaction.user.id}_${opponent.id}`)
+
+          .setLabel(`🏆 ${interaction.user.username}`)
+
+          .setStyle(ButtonStyle.Success),
+
+        new ButtonBuilder()
+
+          .setCustomId(`duel_winner_${opponent.id}_${interaction.user.id}`)
+
+          .setLabel(`🏆 ${opponent.username}`)
+
+          .setStyle(ButtonStyle.Primary),
+      );
+
+      await interaction.editReply({
+        embeds: [embed],
+
+        components: [buttons],
+      });
     } catch (error) {
       console.error(error.response?.data || error.message);
+
       await interaction.editReply('❌ Error al procesar el desafío.');
     }
+
     return;
   }
 
@@ -343,4 +414,3 @@ app.listen(PORT, () => {
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN);
-
