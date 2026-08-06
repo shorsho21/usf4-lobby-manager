@@ -152,7 +152,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           `🍔💨 ¡Kikosho fallido... 🥺!\n\n` +
             `🥺 No pude encontrar tu hamburguesa... quiero decir tu lobby:\n` +
             `${response.data.message}\n\n` +
-            `🌱 Abre tu sala de **Ultra Street Fighter IV** y volveré a buscarla por ti, luchador. 🥊`,
+            `🌱 Abre tu sala de ${response.data.gameextrainfo} y volveré a buscarla por ti, luchador. 🥊`,
         );
         return;
       }
@@ -160,7 +160,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const steamLink = response.data.joinLink;
 
       const embed = new EmbedBuilder()
-        .setTitle('🥊 Lobby de Ultra Street Fighter IV')
+        .setTitle('🥊 Lobby '+response.data.gameextrainfo)
         .setDescription(
           'Un nuevo lobby está disponible.\n\n' +
             '🎮 **Link de conexión:**\n' +
@@ -179,13 +179,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
           },
           {
             name: '🎮 Juego',
-            value: response.data.game || 'Ultra Street Fighter IV',
+            value: response.data.game || response.data.gameextrainfo,
             inline: true,
           },
           { name: '🟢 Estado', value: 'Lobby activo', inline: true },
         )
         .setFooter({
-          text: 'SF4 Tournament Bot • Ultra Street Fighter IV',
+          text: 'Chun Burger bot • ' + (response.data.gameextrainfo ),
           iconURL: client.user.displayAvatarURL(),
         })
         .setTimestamp();
@@ -317,7 +317,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await interaction.reply(
       '🍔 **Chun-Burger Bot**\n\n' +
         '🌸 ¡Konnichiwa, luchador! Soy Chun-Burger 🥊✨\n\n' +
-        'Mi trabajo es ayudarte a crear y encontrar lobbies de **Ultra Street Fighter IV** 🍔\n\n' +
+        'Mi trabajo es ayudarte a crear y encontrar lobbies de tus juegos favoritos 🍔\n\n' +
         'Con mis poderes de Kikosho puedo buscar partidas, ayudar a organizar combates y hacer que la pelea empiece más rápido 💨\n\n' +
         '🌱 Todavía estoy en entrenamiento, así que puede que cometa algún pequeño error uwu.\n\n' +
         'Gracias por ayudarme a mejorar 💕\n\n' +
