@@ -59,13 +59,12 @@ export class UsersService {
     console.log("guardando los datos en local")
 
     supaUser.discord_id = body.discordId;
-    supaUser.discord_user = body.username;
+    supaUser.discord_user = body.discordUser;
     supaUser.steam_profile = body.steamProfile;
     supaUser.steam_ID = steamId;
 
     console.log("Datos a guardar:", supaUser);
 
-    console.log("Guardando usuario en Supabase...");
     try {
       await supabase.from('users').upsert([supaUser]);
     } catch (error) {
@@ -90,5 +89,51 @@ export class UsersService {
       .single();
 
     return data;
+  }
+
+  async createDuelRecord(body: any) {
+    const {
+      challenger_discord_id,
+      opponent_discord_id,
+      winner_discord_id,
+      ft,
+      game,
+    } = body;
+
+    try {
+      const { data, error } = await supabase
+        .from('duel_history')
+        .insert([
+          {
+            challenger_discord_id,
+            opponent_discord_id,
+            winner_discord_id,
+            ft,
+            game,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error al insertar el duelo en Supabase:', error);
+        return {
+          success: false,
+          message: 'Error al registrar el resultado del duelo.',
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Duelo registrado correctamente.',
+        data,
+      };
+    } catch (error) {
+      console.error('Error inesperado al guardar el duelo:', error);
+      return {
+        success: false,
+        message: 'Error al guardar el duelo.',
+      };
+    }
   }
 }

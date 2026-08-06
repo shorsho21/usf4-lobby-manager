@@ -94,24 +94,42 @@ client.once(Events.ClientReady, async () => {
   ====================================
 */
 client.on(Events.InteractionCreate, async (interaction) => {
-
   /*
     ------------------------------------
           MANEJO DE BOTONES
     ------------------------------------
   */
   if (interaction.isButton()) {
-    if (!interaction.customId.startsWith('duel_winner_')) return;
+    if (!interaction.customId.startsWith('dw:')) return;
 
-    const data = interaction.customId.split('_');
-    const winnerId = data[2];
-    const loserId = data[3];
+    const [
+      ,
+      challengerDiscordId,
+      opponentDiscordId,
+      winnerDiscordId,
+      ft,
+      encodedGame,
+    ] = interaction.customId.split(':');
+
+    const game = decodeURIComponent(encodedGame);
+
+    const duelResultPayload = {
+      challenger_discord_id: challengerDiscordId,
+      opponent_discord_id: opponentDiscordId,
+      winner_discord_id: winnerDiscordId,
+      ft: parseInt(ft, 10),
+      game: game,
+    };
 
     try {
-      const winner = await client.users.fetch(winnerId);
+      const winner = await client.users.fetch(winnerDiscordId);
+      const loserId =
+        winnerDiscordId === challengerDiscordId
+          ? opponentDiscordId
+          : challengerDiscordId;
       const loser = await client.users.fetch(loserId);
 
-      // Deshabilitar los botones de la interacción
+      // Deshabilitar los botones inmediatamente para evitar múltiples clics
       const row = ActionRowBuilder.from(interaction.message.components[0]);
       row.components.forEach((button) => button.setDisabled(true));
 
@@ -119,13 +137,24 @@ client.on(Events.InteractionCreate, async (interaction) => {
         components: [row],
       });
 
+      // Guardar el registro en Supabase a través del endpoint /users/duels
+      try {
+        await axios.post(`${process.env.API_URL}/users/duels`, duelResultPayload);
+      } catch (dbError) {
+        console.error(
+          'Error al guardar el duelo en la API/BD:',
+          dbError.response?.data || dbError.message,
+        );
+      }
+
+      // Notificar el resultado en Discord
       await interaction.followUp({
         embeds: [
           new EmbedBuilder()
             .setColor(0x22c55e)
             .setTitle('🏆 DUEL FINALIZADO')
             .setDescription(
-              `🥇 ${winner} ganó el FT.\n\n` +
+              `🥇 ${winner} ganó el **FT${ft}** de **${game}**.\n\n` +
                 `👏 ¡Felicitaciones!\n\n` +
                 `GG ${loser} 🍔`,
             )
@@ -134,7 +163,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         ],
       });
     } catch (error) {
-      console.error('Error procesando botón de duelo:', error);
+      console.error('Error procesando el resultado del duelo:', error);
     }
     return;
   }
@@ -171,7 +200,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
       } else {
         await interaction.reply({
-          content: '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
+          content:
+            '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
           ephemeral: true,
         });
       }
@@ -179,7 +209,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
       console.error(error.response?.data || error.message);
       if (!interaction.replied) {
         await interaction.reply({
-          content: '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
+          content:
+            '❌🍔 No pude guardar tu perfil de Steam. Intenta nuevamente.',
           ephemeral: true,
         });
       }
@@ -200,7 +231,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         `${process.env.API_URL}/steam/lobby/${interaction.user.id}`,
       );
 
-      const gameName = response.data.game || response.data.gameextrainfo || 'Juego';
+      const gameName =
+        response.data.game || response.data.gameextrainfo || 'Juego';
 
       if (!response.data.success) {
         await interaction.editReply(
@@ -282,6 +314,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
 
       const steamLink = response.data.joinLink;
+      const game =
+        response.data.game ||
+        response.data.gameextrainfo ||
+        'Juego desconocido';
 
       const embed = new EmbedBuilder()
         .setColor(0xdc2626)
@@ -289,21 +325,28 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .setDescription(
           `# ${interaction.user.username} 🆚 ${opponent.username}\n\n` +
             `🥋 ${interaction.user} desafía a ${opponent}\n\n` +
-            `🏆 FT${ft}`,
+            `🏆 **Formato:** FT${ft}\n` +
+            `🎮 **Juego:** ${game}`,
         )
         .addFields({
           name: '🔗 Steam Lobby',
           value: `\`\`\`\n${steamLink}\n\`\`\``,
         });
 
+      const encodedGame = encodeURIComponent(game);
+
       const buttons = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId(`duel_winner_${interaction.user.id}_${opponent.id}`)
+          .setCustomId(
+            `dw:${interaction.user.id}:${opponent.id}:${interaction.user.id}:${ft}:${encodedGame}`,
+          )
           .setLabel(`🏆 ${interaction.user.username}`)
           .setStyle(ButtonStyle.Success),
 
         new ButtonBuilder()
-          .setCustomId(`duel_winner_${opponent.id}_${interaction.user.id}`)
+          .setCustomId(
+            `dw:${interaction.user.id}:${opponent.id}:${opponent.id}:${ft}:${encodedGame}`,
+          )
           .setLabel(`🏆 ${opponent.username}`)
           .setStyle(ButtonStyle.Primary),
       );

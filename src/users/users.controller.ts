@@ -11,4 +11,10 @@ export class UsersController {
   async createUser(@Body() body: any) {
     return await this.usersService.createUser(body);
   }
+
+  // Este método responde a POST /users/duels sin necesidad de carpetas extra
+  @Post('duels')
+  async createDuel(@Body() body: any) {
+    return await this.usersService.createDuelRecord(body);
+  }
 }
