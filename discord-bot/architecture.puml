@@ -1,0 +1,86 @@
+@startuml
+title Arquitectura del bot Chun-Burger
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+actor "Usuario de Discord" as user
+cloud Discord as discord
+cloud "API REST\n(API_URL)" as api
+database "Base de datos" as db
+
+package "discord-bot" {
+  component "index.js\nArranque y enrutamiento" as main
+  component "Servidor Express\nGET /" as express
+  component "Cliente Discord.js" as client
+
+  package "commands" {
+    component "definitions.js\nDefinición de slash commands" as definitions
+    component "index.js\nRegistro de comandos" as registration
+  }
+
+  package "handlers" {
+    component "command-handler.js\nDispatcher de comandos" as commandHandler
+    component "button-handler.js\nResultado de duelos" as buttonHandler
+
+    package "handlers/commands" {
+      component "set-steam.js" as setSteam
+      component "lobby.js" as lobby
+      component "duel.js" as duel
+      component "help.js" as help
+      component "about.js" as about
+    }
+  }
+
+  package "embeds" {
+    component "lobby.js\nEmbed de lobby" as lobbyEmbed
+    component "duel.js\nEmbed y botones" as duelEmbed
+    component "duel-result.js\nEmbed de resultado" as resultEmbed
+  }
+
+  component "services/api.js\nCliente Axios" as apiService
+  component "assets.js\nBanners adjuntos" as assets
+}
+
+user --> discord : Usa /setsteam, /lobby, /duel\ny pulsa botones
+discord --> client : Interacciones
+main --> client : Crea y configura
+main --> express : Inicia
+client --> registration : ClientReady
+registration --> definitions : Lee comandos
+registration --> discord : REST: registra comandos
+
+client --> commandHandler : Slash command
+client --> buttonHandler : Botón dw:*
+commandHandler --> setSteam : /setsteam
+commandHandler --> lobby : /lobby
+commandHandler --> duel : /duel
+commandHandler --> help : /help
+commandHandler --> about : /about
+
+setSteam --> apiService : Guarda perfil Steam
+lobby --> apiService : Consulta lobby
+duel --> apiService : Consulta lobby
+buttonHandler --> apiService : Guarda resultado
+apiService --> api : HTTP
+api --> db : Persiste datos
+
+lobby --> lobbyEmbed
+lobby --> assets
+duel --> duelEmbed
+duel --> assets
+buttonHandler --> resultEmbed
+buttonHandler --> assets
+
+note right of apiService
+  Operaciones:
+  - POST /users
+  - GET /steam/lobby/{discordId}
+  - POST /users/duels
+end note
+
+note bottom of assets
+  banner-chun-li.png
+  lobby-chun-li.png
+  duel-chun-li.png
+end note
+@enduml
