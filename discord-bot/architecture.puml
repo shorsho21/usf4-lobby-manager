@@ -20,7 +20,8 @@ package "discord-bot" {
 
   package "handlers" {
     component "command-handler.js\nDispatcher de comandos" as commandHandler
-    component "button-handler.js\nResultado de duelos" as buttonHandler
+    component "button-handler.js\nResultado y dispatcher de botones" as buttonHandler
+    component "rematch-handler.js\nSolicitud y decisión de revancha" as rematchHandler
 
     package "handlers/commands" {
       component "set-steam.js" as setSteam
@@ -50,7 +51,8 @@ registration --> definitions : Lee comandos
 registration --> discord : REST: registra comandos
 
 client --> commandHandler : Slash command
-client --> buttonHandler : Botón dw:*
+client --> buttonHandler : Botón dw:* o rematch:*
+buttonHandler --> rematchHandler : Botón rematch:*
 commandHandler --> setSteam : /setsteam
 commandHandler --> lobby : /lobby
 commandHandler --> duel : /duel
@@ -61,6 +63,8 @@ setSteam --> apiService : Guarda perfil Steam
 lobby --> apiService : Consulta lobby
 duel --> apiService : Consulta lobby
 buttonHandler --> apiService : Guarda resultado
+rematchHandler --> apiService : Solicita / acepta / rechaza revancha
+rematchHandler --> apiService : Consulta lobby al aceptar
 apiService --> api : HTTP
 api --> db : Persiste datos
 
@@ -70,12 +74,23 @@ duel --> duelEmbed
 duel --> assets
 buttonHandler --> resultEmbed
 buttonHandler --> assets
+rematchHandler --> duelEmbed : Reutiliza duelo aceptado
+rematchHandler --> assets : Banner del nuevo duelo
 
 note right of apiService
   Operaciones:
   - POST /users
   - GET /steam/lobby/{discordId}
   - POST /users/duels
+  - POST /users/duels/{duelId}/rematch
+  - POST /users/duels/{duelId}/rematch/accept
+  - POST /users/duels/{duelId}/rematch/reject
+end note
+
+note right of rematchHandler
+  El botón inicial contiene el ID
+  exacto del duelo. El backend valida
+  perdedor, ganador, ventana y estado.
 end note
 
 note bottom of assets

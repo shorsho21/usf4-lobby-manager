@@ -21,11 +21,12 @@ package "NestJS API" {
 
   package "users" {
     component "UsersModule" as usersModule
-    component "UsersController\nPOST /users\nPOST /users/duels" as usersController
-    component "UsersService\nReglas de negocio" as usersService
-    component "UsersRepository\nPersistencia" as usersRepository
+    component "UsersController\nPOST /users\nPOST /users/duels\nPOST /users/duels/:duelId/rematch/*" as usersController
+    component "UsersService\nUsuarios, duelos y reglas de revancha" as usersService
+    component "UsersRepository\nUsuarios, duelos y solicitudes" as usersRepository
     component "CreateUserDto" as createUserDto
     component "CreateDuelDto" as createDuelDto
+    component "RematchActionDto" as rematchActionDto
   }
 
   package "steam" {
@@ -49,12 +50,13 @@ appModule --> steamModule
 appController --> appService
 
 client --> appController : GET /
-client --> usersController : POST /users\nPOST /users/duels
+client --> usersController : POST /users\nPOST /users/duels\nPOST /users/duels/:duelId/rematch\nPOST /accept o /reject
 client --> steamController : GET /steam/lobby/:discordId
 
 usersModule --> steamApiModule
 usersController --> createUserDto
 usersController --> createDuelDto
+usersController --> rematchActionDto
 usersController --> usersService
 usersService --> usersRepository
 usersService --> steamApiService : Resuelve SteamID
@@ -69,9 +71,18 @@ steamService --> steamApiService : Obtiene lobby
 steamApiService --> steamApi
 
 note right of usersService
-  Acepta username y discordUser
-  para mantener compatibilidad
-  con el bot actual.
+  Registra finished_at al finalizar un duelo.
+  Valida perdedor, ganador original,
+  duelo terminado, ventana configurable
+  y estado de la solicitud de revancha.
+end note
+
+note right of usersRepository
+  duel_history
+  rematch_requests
+
+  Un índice único parcial evita más de
+  una solicitud pendiente por duelo.
 end note
 
 note bottom of steamApiService
