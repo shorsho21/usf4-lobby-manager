@@ -176,8 +176,10 @@ Conviene definir una restricción única para `users.discord_id`, así `upsert` 
 │   │   └── steam-api/      # Integración reutilizable con Steam Web API
 │   └── users/              # DTOs, repositorio, perfiles y registro de duelos
 ├── discord-bot/
-│   ├── handlers/           # Interacciones de Discord
-│   └── architecture.puml   # UML del bot
+│   └── handlers/          # Interacciones de Discord
+├── docs/
+│   ├── bot-architecture.puml    # UML del bot
+│   └── nest-architecture.puml   # UML de la API
 └── test/                   # Pruebas e2e de la API
 ```
 
