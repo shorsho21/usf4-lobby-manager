@@ -4,4 +4,5 @@ export class CreateDuelDto {
   winner_discord_id!: string;
   ft!: number;
   game!: string;
+  finished_at?: string;
 }

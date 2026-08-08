@@ -1,4 +1,9 @@
-const { EmbedBuilder } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+} = require('discord.js');
 
 function createDuelResultEmbed({ client, winner, loser, ft, game }) {
   return new EmbedBuilder()
@@ -27,4 +32,13 @@ function createDuelResultEmbed({ client, winner, loser, ft, game }) {
     .setTimestamp();
 }
 
-module.exports = { createDuelResultEmbed };
+function createRematchButton(duelId) {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`rematch:${duelId}`)
+      .setLabel('🔄 Solicitar revancha')
+      .setStyle(ButtonStyle.Secondary),
+  );
+}
+
+module.exports = { createDuelResultEmbed, createRematchButton };

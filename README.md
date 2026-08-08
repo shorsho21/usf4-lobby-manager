@@ -29,6 +29,7 @@ Discord ──► Bot ──► API NestJS ──► Supabase
 - Publicación del enlace de unión directamente en Discord.
 - Desafíos `First To X` con botones para registrar al ganador.
 - Historial de duelos guardado en Supabase.
+- Solicitudes de revancha desde el resultado, válidas durante 60 minutos.
 
 ## Requisitos
 
@@ -67,6 +68,9 @@ STEAM_API_KEY=tu_clave_de_steam
 # Supabase
 SUPABASE_URL=https://tu-proyecto.supabase.co
 SUPABASE_KEY=tu_clave_de_supabase
+
+# Opcional: minutos desde la finalización para solicitar una revancha (por defecto: 60)
+REMATCH_WINDOW_MINUTES=60
 ```
 
 Luego creá `discord-bot/.env` para el bot:
@@ -113,7 +117,7 @@ Al conectarse, el bot registra automáticamente sus slash commands en Discord.
 | `/help` | Muestra la ayuda dentro de Discord. |
 | `/about` | Presenta a Chun-Burger. |
 
-Cuando termina un duelo, cualquiera de los dos botones de ganador registra el resultado en la API y deshabilita la selección para evitar duplicados.
+Cuando termina un duelo, cualquiera de los dos botones de ganador registra el resultado en la API y deshabilita la selección para evitar duplicados. El resultado incluye un botón de revancha: solo el perdedor puede iniciarla y el ganador original puede aceptarla o rechazarla.
 
 ## Endpoints de la API
 
@@ -123,6 +127,9 @@ Cuando termina un duelo, cualquiera de los dos botones de ganador registra el re
 | `POST` | `/users` | Crea o actualiza la relación entre usuario de Discord y perfil de Steam. |
 | `GET` | `/steam/lobby/:discordId` | Devuelve el lobby activo asociado al usuario. |
 | `POST` | `/users/duels` | Guarda el resultado de un desafío. |
+| `POST` | `/users/duels/:duelId/rematch` | El perdedor solicita revancha. |
+| `POST` | `/users/duels/:duelId/rematch/accept` | El ganador original acepta la revancha. |
+| `POST` | `/users/duels/:duelId/rematch/reject` | El ganador original rechaza la revancha. |
 
 Ejemplo para registrar un perfil:
 
@@ -141,7 +148,10 @@ curl -X POST http://localhost:3000/users \
 La API espera, como mínimo, estas columnas:
 
 - `users`: `discord_id`, `discord_user`, `steam_profile`, `steam_ID`.
-- `duel_history`: `challenger_discord_id`, `opponent_discord_id`, `winner_discord_id`, `ft`, `game`.
+- `duel_history`: `challenger_discord_id`, `opponent_discord_id`, `winner_discord_id`, `ft`, `game`, `finished_at`.
+- `rematch_requests`: solicitud asociada al ID exacto del duelo original, solicitante, estado y fechas.
+
+Antes de desplegar, ejecutar [`supabase/migrations/20260808_add_rematches.sql`](supabase/migrations/20260808_add_rematches.sql) en el SQL Editor de Supabase.
 
 Conviene definir una restricción única para `users.discord_id`, así `upsert` puede actualizar correctamente el perfil de cada jugador.
 

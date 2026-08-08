@@ -16,4 +16,23 @@ function saveDuelResult(payload) {
   return api.post('/users/duels', payload);
 }
 
-module.exports = { getLobby, saveDuelResult, saveSteamProfile };
+function requestRematch(duelId, discordId) {
+  return api.post(`/users/duels/${duelId}/rematch`, { discordId });
+}
+
+function acceptRematch(duelId, discordId, requestId) {
+  return api.post(`/users/duels/${duelId}/rematch/accept`, { discordId, requestId });
+}
+
+function rejectRematch(duelId, discordId, requestId) {
+  return api.post(`/users/duels/${duelId}/rematch/reject`, { discordId, requestId });
+}
+
+module.exports = {
+  acceptRematch,
+  getLobby,
+  rejectRematch,
+  requestRematch,
+  saveDuelResult,
+  saveSteamProfile,
+};
