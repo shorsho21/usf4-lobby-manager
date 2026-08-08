@@ -161,11 +161,13 @@ Conviene definir una restricción única para `users.discord_id`, así `upsert` 
 ```text
 .
 ├── src/
-│   ├── steam/              # Steam Web API, scraping y consulta de lobbies
-│   ├── users/              # Usuarios y registro de duelos
-│   └── supabase.ts         # Cliente de Supabase
+│   ├── database/           # Módulo global y cliente de Supabase
+│   ├── steam/              # Steam Web API y consulta de lobbies
+│   │   └── steam-api/      # Integración reutilizable con Steam Web API
+│   └── users/              # DTOs, repositorio, perfiles y registro de duelos
 ├── discord-bot/
-│   └── index.js            # Comandos e interacciones de Discord
+│   ├── handlers/           # Interacciones de Discord
+│   └── architecture.puml   # UML del bot
 └── test/                   # Pruebas e2e de la API
 ```
 

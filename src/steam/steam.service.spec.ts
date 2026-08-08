@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UsersService } from '../users/users.service';
+import { SteamApiService } from './steam-api/steam-api.service';
 import { SteamService } from './steam.service';
 
 describe('SteamService', () => {
@@ -6,7 +8,11 @@ describe('SteamService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [SteamService],
+      providers: [
+        SteamService,
+        { provide: UsersService, useValue: { getUserByDiscordId: jest.fn() } },
+        { provide: SteamApiService, useValue: { getLobbyLink: jest.fn() } },
+      ],
     }).compile();
 
     service = module.get<SteamService>(SteamService);

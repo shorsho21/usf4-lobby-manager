@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SteamApiService } from './steam-api.service';
 
@@ -6,7 +7,10 @@ describe('SteamApiService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [SteamApiService],
+      providers: [
+        SteamApiService,
+        { provide: ConfigService, useValue: { getOrThrow: jest.fn() } },
+      ],
     }).compile();
 
     service = module.get<SteamApiService>(SteamApiService);

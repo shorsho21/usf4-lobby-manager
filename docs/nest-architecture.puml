@@ -1,0 +1,81 @@
+@startuml
+title Arquitectura modular del servidor NestJS
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+actor "Bot / Cliente HTTP" as client
+cloud "Steam Web API" as steamApi
+database "Supabase" as supabase
+
+package "NestJS API" {
+  component "main.ts" as main
+  component "AppModule" as appModule
+  component "ConfigModule\n(configuración global)" as config
+  component "AppController\nGET /" as appController
+  component "AppService" as appService
+
+  package "database" {
+    component "DatabaseModule\n(global)" as databaseModule
+    component "SupabaseService" as supabaseService
+  }
+
+  package "users" {
+    component "UsersModule" as usersModule
+    component "UsersController\nPOST /users\nPOST /users/duels" as usersController
+    component "UsersService\nReglas de negocio" as usersService
+    component "UsersRepository\nPersistencia" as usersRepository
+    component "CreateUserDto" as createUserDto
+    component "CreateDuelDto" as createDuelDto
+  }
+
+  package "steam" {
+    component "SteamModule" as steamModule
+    component "SteamController\nGET /steam/lobby/:discordId" as steamController
+    component "SteamService\nConsulta de lobby" as steamService
+
+    package "steam-api" {
+      component "SteamApiModule" as steamApiModule
+      component "SteamApiService\nPerfiles y lobbies" as steamApiService
+    }
+  }
+}
+
+client --> main
+main --> appModule
+appModule --> config
+appModule --> databaseModule
+appModule --> usersModule
+appModule --> steamModule
+appController --> appService
+
+client --> appController : GET /
+client --> usersController : POST /users\nPOST /users/duels
+client --> steamController : GET /steam/lobby/:discordId
+
+usersModule --> steamApiModule
+usersController --> createUserDto
+usersController --> createDuelDto
+usersController --> usersService
+usersService --> usersRepository
+usersService --> steamApiService : Resuelve SteamID
+usersRepository --> supabaseService
+supabaseService --> supabase
+
+steamModule --> usersModule
+steamModule --> steamApiModule
+steamController --> steamService
+steamService --> usersService : Busca usuario
+steamService --> steamApiService : Obtiene lobby
+steamApiService --> steamApi
+
+note right of usersService
+  Acepta username y discordUser
+  para mantener compatibilidad
+  con el bot actual.
+end note
+
+note bottom of steamApiService
+  resolveProfileId()
+  getLobbyLink()
+end note
+@enduml

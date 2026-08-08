@@ -1,20 +1,19 @@
 import { Body, Controller, Post } from '@nestjs/common';
+import { CreateDuelDto } from './dto/create-duel.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  async createUser(@Body() body: any) {
-    return await this.usersService.createUser(body);
+  createUser(@Body() body: CreateUserDto) {
+    return this.usersService.createUser(body);
   }
 
-  // Este método responde a POST /users/duels sin necesidad de carpetas extra
   @Post('duels')
-  async createDuel(@Body() body: any) {
-    return await this.usersService.createDuelRecord(body);
+  createDuel(@Body() body: CreateDuelDto) {
+    return this.usersService.createDuelRecord(body);
   }
 }

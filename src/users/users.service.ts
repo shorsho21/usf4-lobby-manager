@@ -1,138 +1,72 @@
-import { Injectable } from '@nestjs/common';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import axios from 'axios';
-import { supabase } from 'src/supabase';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { SteamApiService } from '../steam/steam-api/steam-api.service';
+import { CreateDuelDto } from './dto/create-duel.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
-  private usersFile = path.join(process.cwd(), 'data', 'users.json');
+  private readonly logger = new Logger(UsersService.name);
 
-  async createUser(body: any) {
-    const data = fs.readFileSync(this.usersFile, 'utf8');
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly steamApiService: SteamApiService,
+  ) {}
 
-    const users = JSON.parse(data);
-    const supaUser = {
-      discord_id: '',
-      discord_user: '',
-      steam_profile: '',
-      steam_ID: '',
-    };
-
-    let steamId = '';
-
-    // Si ya vino un SteamID64
-    const profilesMatch = body.steamProfile.match(/\/profiles\/(\d+)/);
-
-    if (profilesMatch) {
-      steamId = profilesMatch[1];
-    } else {
-      // Si vino una vanity URL (/id/...)
-      const vanityMatch = body.steamProfile.match(/\/id\/([^/]+)/);
-
-      if (vanityMatch) {
-        const vanity = vanityMatch[1];
-
-        const response = await axios.get(
-          'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/',
-          {
-            params: {
-              key: process.env.STEAM_API_KEY,
-              vanityurl: vanity,
-            },
-          },
-        );
-
-        if (response.data.response.success !== 1) {
-          return {
-            success: false,
-            message: 'No se pudo obtener el SteamID.',
-          };
-        }
-
-        steamId = response.data.response.steamid;
-      }
+  async createUser(body: CreateUserDto) {
+    const username = body.username ?? body.discordUser;
+    if (!body.discordId || !username || !body.steamProfile) {
+      throw new BadRequestException(
+        'discordId, username y steamProfile son obligatorios.',
+      );
     }
 
-    //guardamos los datos en supauser
-    console.log("guardando los datos en local")
-
-    supaUser.discord_id = body.discordId;
-    supaUser.discord_user = body.discordUser;
-    supaUser.steam_profile = body.steamProfile;
-    supaUser.steam_ID = steamId;
-
-    console.log("Datos a guardar:", supaUser);
+    const steamId = await this.steamApiService.resolveProfileId(
+      body.steamProfile,
+    );
+    if (!steamId) {
+      return { success: false, message: 'No se pudo obtener el SteamID.' };
+    }
 
     try {
-      await supabase.from('users').upsert([supaUser]);
+      await this.usersRepository.upsertUser({
+        discord_id: body.discordId,
+        discord_user: username,
+        steam_profile: body.steamProfile,
+        steam_ID: steamId,
+      });
     } catch (error) {
-      console.error('Error al guardar el usuario en Supabase:', error);
+      this.logger.error('Error al guardar el usuario en Supabase:', error);
       return {
         success: false,
         message: 'Error al guardar el usuario en Supabase.',
       };
     }
-
-    return {
-      success: true,
-      message: 'Usuario guardado correctamente.',
-    };
+    return { success: true, message: 'Usuario guardado correctamente.' };
   }
 
   async getUserByDiscordId(discordId: string) {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('discord_id', discordId)
-      .single();
-
-    return data;
+    try {
+      return await this.usersRepository.findByDiscordId(discordId);
+    } catch (error) {
+      this.logger.error('Error al obtener el usuario de Supabase:', error);
+      return null;
+    }
   }
 
-  async createDuelRecord(body: any) {
-    const {
-      challenger_discord_id,
-      opponent_discord_id,
-      winner_discord_id,
-      ft,
-      game,
-    } = body;
-
+  async createDuelRecord(body: CreateDuelDto) {
     try {
-      const { data, error } = await supabase
-        .from('duel_history')
-        .insert([
-          {
-            challenger_discord_id,
-            opponent_discord_id,
-            winner_discord_id,
-            ft,
-            game,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error al insertar el duelo en Supabase:', error);
-        return {
-          success: false,
-          message: 'Error al registrar el resultado del duelo.',
-        };
-      }
-
+      const data = await this.usersRepository.createDuel(body);
       return {
         success: true,
         message: 'Duelo registrado correctamente.',
         data,
       };
     } catch (error) {
-      console.error('Error inesperado al guardar el duelo:', error);
+      this.logger.error('Error al insertar el duelo en Supabase:', error);
       return {
         success: false,
-        message: 'Error al guardar el duelo.',
+        message: 'Error al registrar el resultado del duelo.',
       };
     }
   }
