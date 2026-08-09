@@ -25,9 +25,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v5
-
       - name: Install PlantUML and Graphviz
         run: |
           sudo apt-get update
@@ -97,14 +94,6 @@ jobs:
         with:
           path: site
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
