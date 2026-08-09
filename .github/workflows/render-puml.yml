@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Install PlantUML and Graphviz
         run: |
@@ -68,7 +68,6 @@ jobs:
               <title>Diagramas PlantUML</title>
               <style>
                 body { font-family: Arial, sans-serif; margin: 2rem; }
-                .card { margin-bottom: 2rem; }
                 img { max-width: 100%; border: 1px solid #ddd; padding: 0.5rem; }
               </style>
             </head>
@@ -89,11 +88,25 @@ jobs:
           </html>
           EOF
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
