@@ -23,14 +23,22 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Render PlantUML diagrams
+      - name: Install PlantUML and Graphviz
         run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz plantuml
+
+      - name: Render PlantUML diagrams
+        shell: bash
+        run: |
+          set -euo pipefail
           mkdir -p site
+
           mapfile -t puml_files < <(find docs -type f -name '*.puml' | sort)
 
           if [ ${#puml_files[@]} -eq 0 ]; then
@@ -52,7 +60,7 @@ jobs:
 
           for puml in "${puml_files[@]}"; do
             echo "Rendering $puml"
-            docker run --rm -v "$PWD:/data" -w /data plantuml/plantuml:latest -tsvg -o /data/site "$puml"
+            plantuml -tsvg -o site "$puml"
           done
 
           cat > site/index.html <<'EOF'
