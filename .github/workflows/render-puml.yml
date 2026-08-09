@@ -1,4 +1,4 @@
-name: Render PlantUML diagrams to GitHub Pages
+name: Render PlantUML diagrams to GitHub Actions artifact
 
 on:
   push:
@@ -34,18 +34,7 @@ jobs:
 
           if [ ${#puml_files[@]} -eq 0 ]; then
             echo "No PlantUML files found under docs/."
-            cat > site/index.html <<'EOF'
-            <!doctype html>
-            <html lang="es">
-              <head>
-                <meta charset="utf-8" />
-                <title>Diagramas PlantUML</title>
-              </head>
-              <body>
-                <h1>No hay diagramas PlantUML aún</h1>
-              </body>
-            </html>
-            EOF
+            python -c 'from pathlib import Path; Path("site/index.html").write_text("""<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Diagramas PlantUML</title>\n  </head>\n  <body>\n    <h1>No hay diagramas PlantUML aún</h1>\n  </body>\n</html>\n""", encoding="utf-8")'
             exit 0
           fi
 
@@ -54,33 +43,7 @@ jobs:
             plantuml -tsvg -o site "$puml"
           done
 
-          cat > site/index.html <<'EOF'
-          <!doctype html>
-          <html lang="es">
-            <head>
-              <meta charset="utf-8" />
-              <title>Diagramas PlantUML</title>
-              <style>
-                body { font-family: Arial, sans-serif; margin: 2rem; }
-                img { max-width: 100%; border: 1px solid #ddd; padding: 0.5rem; }
-              </style>
-            </head>
-            <body>
-              <h1>Diagramas PlantUML</h1>
-              <p>Estos diagramas se generan automáticamente desde los archivos .puml en la carpeta docs.</p>
-              <ul>
-          EOF
-
-          for puml in "${puml_files[@]}"; do
-            name=$(basename "$puml" .puml)
-            echo "              <li><a href=\"${name}.svg\">${name}</a></li>" >> site/index.html
-          done
-
-          cat >> site/index.html <<'EOF'
-              </ul>
-            </body>
-          </html>
-          EOF
+          python -c 'from pathlib import Path; puml_files = sorted(Path("docs").rglob("*.puml")); items = ["              <li><a href=\"{}\">{}</a></li>".format(p.stem + ".svg", p.stem) for p in puml_files]; Path("site/index.html").write_text("""<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Diagramas PlantUML</title>\n    <style>\n      body { font-family: Arial, sans-serif; margin: 2rem; }\n      img { max-width: 100%; border: 1px solid #ddd; padding: 0.5rem; }\n    </style>\n  </head>\n  <body>\n    <h1>Diagramas PlantUML</h1>\n    <p>Estos diagramas se generan automáticamente desde los archivos .puml en la carpeta docs.</p>\n    <ul>\n""" + "\n".join(items) + "\n    </ul>\n  </body>\n</html>\n""", encoding="utf-8")'
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
