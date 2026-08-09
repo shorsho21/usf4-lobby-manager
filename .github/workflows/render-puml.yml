@@ -1,0 +1,102 @@
+name: Render PlantUML diagrams to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'docs/**/*.puml'
+      - '.github/workflows/render-puml.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Render PlantUML diagrams
+        run: |
+          mkdir -p site
+          mapfile -t puml_files < <(find docs -type f -name '*.puml' | sort)
+
+          if [ ${#puml_files[@]} -eq 0 ]; then
+            echo "No PlantUML files found under docs/."
+            cat > site/index.html <<'EOF'
+            <!doctype html>
+            <html lang="es">
+              <head>
+                <meta charset="utf-8" />
+                <title>Diagramas PlantUML</title>
+              </head>
+              <body>
+                <h1>No hay diagramas PlantUML aún</h1>
+              </body>
+            </html>
+            EOF
+            exit 0
+          fi
+
+          for puml in "${puml_files[@]}"; do
+            echo "Rendering $puml"
+            docker run --rm -v "$PWD:/data" -w /data plantuml/plantuml:latest -tsvg -o /data/site "$puml"
+          done
+
+          cat > site/index.html <<'EOF'
+          <!doctype html>
+          <html lang="es">
+            <head>
+              <meta charset="utf-8" />
+              <title>Diagramas PlantUML</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 2rem; }
+                .card { margin-bottom: 2rem; }
+                img { max-width: 100%; border: 1px solid #ddd; padding: 0.5rem; }
+              </style>
+            </head>
+            <body>
+              <h1>Diagramas PlantUML</h1>
+              <p>Estos diagramas se generan automáticamente desde los archivos .puml en la carpeta docs.</p>
+              <ul>
+          EOF
+
+          for puml in "${puml_files[@]}"; do
+            name=$(basename "$puml" .puml)
+            echo "              <li><a href=\"${name}.svg\">${name}</a></li>" >> site/index.html
+          done
+
+          cat >> site/index.html <<'EOF'
+              </ul>
+            </body>
+          </html>
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
