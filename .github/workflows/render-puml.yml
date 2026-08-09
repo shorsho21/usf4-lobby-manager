@@ -32,7 +32,7 @@ jobs:
           set -euo pipefail
           mkdir -p site
 
-          mapfile -t puml_files < <(find docs -type f -name '*.puml' | sort)
+          mapfile -t puml_files < <(find docs -type f -name '*.puml' | sort | sed 's|^docs/||')
 
           if [ ${#puml_files[@]} -eq 0 ]; then
             echo "No PlantUML files found under docs/."
@@ -40,10 +40,15 @@ jobs:
             exit 0
           fi
 
+          pushd docs >/dev/null
           for puml in "${puml_files[@]}"; do
             echo "Rendering $puml"
-            plantuml -tsvg -o site "$puml"
+            plantuml -tsvg -o ../site "$puml"
           done
+          popd >/dev/null
+
+          echo "Generated site files:"
+          find site -maxdepth 1 -type f | sort
 
           python -c 'from pathlib import Path; puml_files = sorted(Path("docs").rglob("*.puml")); items = ["              <li><a href=\"{}\">{}</a></li>".format(p.stem + ".svg", p.stem) for p in puml_files]; Path("site/index.html").write_text("""<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Diagramas PlantUML</title>\n    <style>\n      body { font-family: Arial, sans-serif; margin: 2rem; }\n      img { max-width: 100%; border: 1px solid #ddd; padding: 0.5rem; }\n    </style>\n  </head>\n  <body>\n    <h1>Diagramas PlantUML</h1>\n    <p>Estos diagramas se generan automáticamente desde los archivos .puml en la carpeta docs.</p>\n    <ul>\n""" + "\n".join(items) + "\n    </ul>\n  </body>\n</html>\n""", encoding="utf-8")'
 
