@@ -35,6 +35,9 @@ const commands = [
   new SlashCommandBuilder()
     .setName('about')
     .setDescription('Información sobre Chun-Burger Bot'),
+  new SlashCommandBuilder()
+    .setName('profile')
+    .setDescription('Muestra tu perfil de Chun-Burger'),
 ].map((command) => command.toJSON());
 
 module.exports = { commands };

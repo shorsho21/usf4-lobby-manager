@@ -28,6 +28,10 @@ function rejectRematch(duelId, discordId, requestId) {
   return api.post(`/users/duels/${duelId}/rematch/reject`, { discordId, requestId });
 }
 
+function getProfile(discordId) {
+  return api.get(`/users/${discordId}/profile`);
+}
+
 module.exports = {
   acceptRematch,
   getLobby,
@@ -35,4 +39,5 @@ module.exports = {
   requestRematch,
   saveDuelResult,
   saveSteamProfile,
+  getProfile
 };

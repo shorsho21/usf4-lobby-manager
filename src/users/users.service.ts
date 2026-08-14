@@ -93,9 +93,8 @@ export class UsersService {
 
     this.assertWithinRematchWindow(duel);
 
-    const existingRequest = await this.usersRepository.findRematchByDuelId(
-      duelId,
-    );
+    const existingRequest =
+      await this.usersRepository.findRematchByDuelId(duelId);
     if (existingRequest?.status === 'pending') {
       throw new BadRequestException(
         'Ya existe una solicitud de revancha activa para este duelo.',
@@ -176,9 +175,12 @@ export class UsersService {
     const request = requestId
       ? await this.usersRepository.findRematchById(requestId)
       : await this.usersRepository.findRematchByDuelId(duelId);
-    if (!request) throw new NotFoundException('La solicitud de revancha no existe.');
+    if (!request)
+      throw new NotFoundException('La solicitud de revancha no existe.');
     if (request.original_duel_id !== duelId) {
-      throw new BadRequestException('La solicitud no corresponde a este duelo.');
+      throw new BadRequestException(
+        'La solicitud no corresponde a este duelo.',
+      );
     }
     if (request.status === 'accepted') {
       throw new BadRequestException('La solicitud ya fue aceptada.');
@@ -209,9 +211,12 @@ export class UsersService {
     );
     const validWindowMinutes =
       Number.isFinite(windowMinutes) && windowMinutes > 0 ? windowMinutes : 60;
-    const expiresAt = new Date(finishedAt).getTime() + validWindowMinutes * 60_000;
+    const expiresAt =
+      new Date(finishedAt).getTime() + validWindowMinutes * 60_000;
     if (Number.isNaN(expiresAt) || Date.now() > expiresAt) {
-      throw new BadRequestException('La ventana para solicitar revancha expiró.');
+      throw new BadRequestException(
+        'La ventana para solicitar revancha expiró.',
+      );
     }
   }
 
@@ -222,5 +227,30 @@ export class UsersService {
       'code' in error &&
       error.code === '23505'
     );
+  }
+
+  public async getProfile(discordId: string) {
+    //obtengo los datos del usuario y sus stats de duelos
+    const duelStats = await this.usersRepository.duelStats(discordId);
+    const user = await this.usersRepository.findByDiscordId(discordId);
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado.');
+    }
+    //asigno los datos de duelstats y si es nulo, asigno 0 a wins y losses
+    const { wins, losses } = duelStats ?? { wins: 0, losses: 0 };
+    //calculo el winrate
+    const totalDuels = wins + losses;
+    const winRate = totalDuels > 0 ? (wins / totalDuels) * 100 : 0;
+
+    return {
+      discordId: user.discord_id,
+      discordUser: user.discord_user,
+      steamProfile: user.steam_profile,
+      steamId: user.steam_ID,
+      wins: wins,
+      losses: losses,
+      winRate: Math.round(winRate * 10) / 10,
+    };
   }
 }

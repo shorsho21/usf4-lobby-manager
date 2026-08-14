@@ -134,4 +134,31 @@ export class UsersRepository {
     if (error) throw error;
     return data as RematchRequestRecord | null;
   }
+
+  async duelStats(discordId: string): Promise<{
+    wins: number;
+    losses: number;
+  } | null> {
+    const { data, error } = await this.supabase.client
+      .from('duel_history')
+      .select('*')
+      .or(
+        `challenger_discord_id.eq.${discordId},opponent_discord_id.eq.${discordId}`,
+      );
+
+    if (error) throw error;
+
+    let wins = 0;
+    let losses = 0;
+
+    for (const duel of data ?? []) {
+      if (duel.winner_discord_id === discordId) {
+        wins++;
+      } else {
+        losses++;
+      }
+    }
+
+    return { wins, losses };
+  }
 }
