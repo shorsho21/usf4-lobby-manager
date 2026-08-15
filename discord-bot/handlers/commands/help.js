@@ -4,6 +4,8 @@ async function handleHelp(interaction) {
       '✨ ¡Konnichiwa, luchador! Estos son mis movimientos especiales:\n\n' +
       '🥋 `/setsteam <steam_profile>`\n' +
       '→ Guarda tu Steam para poder ayudarte a encontrar partidas.\n\n' +
+      '👤 `/profile [usuario]`\n' +
+      '→ Muestra tu perfil de Chun-Burger o el de otro jugador.\n\n' +
       '💨 `/lobby`\n' +
       '→ Busco tu lobby de tus juegos favoritos con mi poder de Kikosho.\n\n' +
       '🥊 `/duel <jugador> <ft>`\n' +
