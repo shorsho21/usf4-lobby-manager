@@ -32,6 +32,10 @@ function getProfile(discordId) {
   return api.get(`/users/${discordId}/profile`);
 }
 
+function askChun(message) {
+  return api.post('/ai/chat', { message });
+}
+
 module.exports = {
   acceptRematch,
   getLobby,
@@ -39,5 +43,7 @@ module.exports = {
   requestRematch,
   saveDuelResult,
   saveSteamProfile,
-  getProfile
+  getProfile,
+  askChun,
 };
+

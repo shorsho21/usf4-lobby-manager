@@ -44,6 +44,15 @@ const commands = [
         .setDescription('El usuario cuyo perfil deseas consultar (opcional)')
         .setRequired(false),
     ),
+  new SlashCommandBuilder()
+    .setName('chun')
+    .setDescription('Conversa con Chun-Burger')
+    .addStringOption((option) =>
+      option
+        .setName('mensaje')
+        .setDescription('El mensaje o pregunta para Chun-Burger')
+        .setRequired(true),
+    ),
 ].map((command) => command.toJSON());
 
 module.exports = { commands };

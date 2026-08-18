@@ -10,6 +10,8 @@ async function handleHelp(interaction) {
       '→ Busco tu lobby de tus juegos favoritos con mi poder de Kikosho.\n\n' +
       '🥊 `/duel <jugador> <ft>`\n' +
       '→ Desafía a un jugador a una serie First To X.\n\n' +
+      '🤖 `/chun <mensaje>`\n' +
+      '→ Charla conmigo y te responderé con toda mi energía.\n\n' +
       '📖 `/help`\n' +
       '→ Te muestro todos mis comandos disponibles.\n\n' +
       '🍔 `/about`\n' +
@@ -17,5 +19,6 @@ async function handleHelp(interaction) {
       '🌟 ¡Buena suerte en tus combates, luchador!',
   );
 }
+
 
 module.exports = { handleHelp };
